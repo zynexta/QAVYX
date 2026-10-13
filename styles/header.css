@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------------------
+   The homepage header's arrival.
+   ---------------------------------------------------------------------------
+   Everything here applies to ONE element on ONE route: the header
+   `app/page.tsx` renders after the pinned hero. The fifteen inner routes get
+   none of it — their bar is the plain sticky row `SiteHeader` describes, and
+   there is nothing on those pages for it to wait for.
+
+   `lib/nav-reveal.ts` explains WHY this exists at all. The short version is that
+   `position: sticky` cannot say "appear at the end of the pin". It says "stick
+   once you get to the top", and the getting-there is a full-width bordered bar
+   scrolling up through the middle of an empty black screen, attached to nothing.
+
+   ## Every rule is gated on `data-qx-nav-defer`
+
+   The attribute is written only when the boot script has found the sentinel AND
+   an `IntersectionObserver` to watch it with. Ungated, a visitor with no
+   JavaScript would get a header translated off the top of the screen by a
+   stylesheet, with nothing left running to bring it back — the site's navigation
+   permanently hidden by a progressive enhancement that never arrived. Gated, the
+   fallback is the bar behaving exactly as it did before this file existed.     */
+
+html[data-qx-nav-defer] .qx-header--deferred {
+  /* FIXED, not sticky, and this is the substance of the change. Out of flow the
+     bar has no journey up the page to make: it is held against the top edge and
+     either shown there or not. The 4.75rem it vacated sits between the hero and
+     the trust strip, where there is no visual anchor for anything to shift
+     against. */
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  transform: translate3d(0, -100%, 0);
+  /* `visibility` for the same reason the menu panel uses it: an element parked
+     off the top of the viewport is still focusable, so without this the first
+     Tab on the homepage lands on a logo nobody can see. The delay holds it
+     visible for the length of the slide out — see the pairing below. */
+  visibility: hidden;
+  transition:
+    transform 380ms var(--qx-ease-out),
+    visibility 0s linear 380ms;
+}
+
+html[data-qx-nav-defer][data-qx-nav] .qx-header--deferred {
+  transform: translate3d(0, 0, 0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* THE SENTINEL IS THE HEADER'S POSITION IN FLOW, and it has to keep occupying
+   that position with no height of its own. It is what the observer watches, so
+   it must sit exactly where the bar would have stuck — see `app/page.tsx` for
+   why it is a sibling of the header rather than inside it. */
+#qx-nav-sentinel {
+  block-size: 0;
+  pointer-events: none;
+}
+
+/* The reveal is decoration on top of a header that is either there or not, so a
+   visitor who has asked for no motion gets the state and not the slide. The
+   global rule in `app/globals.css` already zeroes every transition; this is here
+   so these rules are legible without knowing that. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-qx-nav-defer] .qx-header--deferred {
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+}

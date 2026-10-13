@@ -1,0 +1,627 @@
+/* ---------------------------------------------------------------------------
+   The menu panel, and the staggered way it arrives.
+   ---------------------------------------------------------------------------
+   Modelled on React Bits' StaggeredMenu, rebuilt in CSS. The original drives
+   every step from GSAP — a timeline for the pre-layers, a stagger for the items,
+   a tween per number, a text cycler on the button — and porting it would have
+   put ~62 KB plus a hydration boundary on fifteen routes that have neither. Every
+   one of those steps is an offset start on a fixed transform, which is what
+   `transition-delay` is. What GSAP was actually buying here was the ability to
+   kill a half-finished open and reverse it, and the close below handles that in
+   one line: the delays live in the OPEN state only, so an interrupted open
+   collapses uniformly instead of unwinding item by item.
+
+   ## TWO WAYS TO BE OPEN, AND EVERY OPEN RULE IS WRITTEN TWICE
+
+   `[data-qx-menu]` on `<html>` is the scripted state, written by `lib/menu.ts`.
+   `#qx-menu-panel:target` is the no-JS one: the header's fallback link points at
+   the panel's own fragment, and the browser opens it with nothing running. Both
+   resolve to the same element, so most pairs are the same descendant selector
+   reached two ways.
+
+   The fallback is gated on `html:not([data-qx-menu-js])` — an attribute the boot
+   script sets before the header is parsed — so with scripting the `:target` rules
+   are dead. Without that gate a hand-typed `/faq#qx-menu-panel` would open a
+   panel whose button still said "Menu", whose `aria-expanded` still said false
+   and which Escape could not close: open by one mechanism, closed by the other.
+
+   THREE rules cannot be written as a descendant of the panel, because their
+   subject is not inside it — the floating WhatsApp button, the root's scroll
+   lock, and the opener's own label. Those use `:has()`, which is the only
+   selector that reaches sideways. Where `:has()` is unsupported and scripting is
+   off, the consequence is cosmetic in all three: the float stays visible, the
+   page behind still scrolls, the label still says "Menu". The panel opens and
+   closes either way, which is the part that matters.
+
+   Nothing in this file is scoped to `data-qx-motion` — see the note at the foot
+   about what happens with the motion layer off.
+
+   ## Closed is `visibility: hidden`, and that is the accessibility half
+
+   Not `opacity: 0`, and not `transform` alone. A panel that is merely moved
+   off-screen is still focusable, still in the accessibility tree, and still
+   hit-testable at whatever coordinates it landed on — this is the same fault
+   `#qx-stage` once had when it ate every click meant for the site navigation.
+   `visibility: hidden` removes all three, `inert` from the boot script removes
+   them again for browsers that honour it, and the delayed transition on the way
+   out is what lets the panel finish leaving before it goes.                    */
+
+.qx-menu {
+  position: fixed;
+  /* THE PANEL HANGS FROM THE HEADER, and that is what makes the opener and the
+     closer one control.
+
+     `inset: 0 0 0 auto` for several phases, which covered the whole viewport
+     height — including the bar. That is why this file used to need a second
+     close control INSIDE the sheet: on a phone the panel is the full screen, and
+     on a desktop it is a 420px column pinned to the right, which is exactly
+     where the toggle sits in a `max-w-[var(--qx-shell)]` row. `elementFromPoint`
+     over the button returned the sheet at both widths. The button turned into an
+     X that nothing could click, and a second X had to be drawn a few pixels away
+     from it.
+
+     Starting at `--qx-nav-h` is the whole fix, and it is one line rather than a
+     z-index fight: there is no overlap to resolve, so the bar keeps its own
+     stacking order, keeps its `backdrop-filter`, and stays live while the menu
+     is open. The token is the header's real height and the header is at y=0
+     whenever the menu can be opened — it is `sticky top-0` on the fifteen inner
+     routes and `fixed` on the homepage once the pin releases it — so the two
+     edges meet on every route and at every scroll position.
+
+     The visitor sees the panel drop out of the bar it came from, under the
+     hairline the bar already draws. */
+  inset: var(--qx-nav-h) 0 0 auto;
+  /* clamp, so the panel is a PANEL on a desktop and the whole screen on a phone
+     — below ~420px wide the 38vw column would be narrower than the longest nav
+     label, and the type would either wrap or shrink out of the display size
+     that makes this a menu rather than a list. */
+  width: clamp(280px, 38vw, 420px);
+  z-index: var(--qx-z-menu);
+  visibility: hidden;
+  /* The panel is full-height and its content is not: the socials block sits at
+     the bottom on a tall window, and on a short one the list scrolls rather
+     than being clipped. `contain` stops that scroll chaining out to the page
+     behind, which on the homepage is a 1015vh pinned sequence. */
+  overscroll-behavior: contain;
+  transition: visibility 0s linear 380ms;
+}
+
+@media (max-width: 640px) {
+  .qx-menu {
+    width: 100%;
+  }
+}
+
+[data-qx-menu] .qx-menu,
+html:not([data-qx-menu-js]) .qx-menu:target {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* THE FLOATING WHATSAPP BUTTON STANDS DOWN WHILE THE MENU IS OPEN.
+
+   Both were kept on the client's call — a chat icon in the header AND the
+   draft's "10 · WhatsApp Button (Global Element)" in the corner — and that is
+   right for a page being read. Over an OPEN menu it is neither: on a phone the
+   panel is the whole screen, so the button is a third WhatsApp target floating
+   on top of a menu that already has one in the header behind it, and it lands
+   exactly on the socials row. `pointer-events` goes with the opacity, because a
+   fully transparent link is still a link. */
+html[data-qx-menu] .qx-whatsapp,
+html:not([data-qx-menu-js]):has(.qx-menu:target) .qx-whatsapp {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.qx-whatsapp {
+  transition: opacity 200ms var(--qx-ease-out);
+}
+
+/* THE PAGE BEHIND DOES NOT SCROLL. On `<html>` rather than `<body>` because the
+   homepage's Lenis scrolls by writing `window.scrollTo`, and this is what makes
+   that write a no-op — so the lock needs no reference to a Lenis instance that
+   lives in a lazy chunk the boot script cannot see. */
+html[data-qx-menu],
+html:not([data-qx-menu-js]):has(.qx-menu:target) {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   The pre-layers: two blank panes that arrive ahead of the sheet.
+   ---------------------------------------------------------------------------
+   The whole of the depth. One rectangle sliding in is a drawer; three arriving
+   70ms apart reads as a panel with thickness, and it is the part of the original
+   worth keeping verbatim. They are decoration and nothing else — no content, no
+   hit target, `aria-hidden` in the markup.                                      */
+
+.qx-menu__layers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.qx-menu__layer,
+.qx-menu__sheet {
+  transform: translate3d(100%, 0, 0);
+  /* CLOSING IS THE BASE STATE, and that is what makes the close uniform. Both
+     halves of a transition read from the state being transitioned TO, so the
+     delays declared in the open rules below apply on the way IN only. Out, every
+     pane leaves together in 320ms — the original's close, and also what an
+     interrupted open needs: no pane left waiting on a delay for a journey that
+     has been cancelled.
+
+     The curve is a literal rather than a token. `styles/tokens.css` has
+     `--qx-ease-out` and `--qx-ease-rise` and no in-curve, and one value used in
+     one file is not a token. */
+  transition: transform 320ms cubic-bezier(0.55, 0, 1, 0.45);
+  will-change: transform;
+}
+
+.qx-menu__layer {
+  position: absolute;
+  inset: 0;
+}
+
+.qx-menu__layer:nth-child(1) {
+  background: var(--qx-line);
+}
+
+.qx-menu__layer:nth-child(2) {
+  background: var(--qx-ink-raised);
+}
+
+[data-qx-menu] .qx-menu__layer,
+[data-qx-menu] .qx-menu__sheet,
+html:not([data-qx-menu-js]) .qx-menu:target .qx-menu__layer,
+html:not([data-qx-menu-js]) .qx-menu:target .qx-menu__sheet {
+  transform: translate3d(0, 0, 0);
+  transition-duration: 520ms;
+  transition-timing-function: var(--qx-ease-out);
+}
+
+[data-qx-menu] .qx-menu__layer:nth-child(2),
+html:not([data-qx-menu-js]) .qx-menu:target .qx-menu__layer:nth-child(2) {
+  transition-delay: 70ms;
+}
+
+[data-qx-menu] .qx-menu__sheet,
+html:not([data-qx-menu-js]) .qx-menu:target .qx-menu__sheet {
+  transition-delay: 140ms;
+  transition-duration: 600ms;
+}
+
+/* --------------------------------------------------------------------------- */
+
+.qx-menu__sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qx-space-5);
+  padding: var(--qx-space-6) var(--qx-space-4) var(--qx-space-4);
+  background: var(--qx-ink);
+  border-left: var(--qx-stroke) solid var(--qx-line);
+  overflow-y: auto;
+}
+
+/* THE CLOSE CONTROL IS THE NO-JS PATH'S, AND NOBODY ELSE'S.
+   ---------------------------------------------------------------------------
+   It carries `qx-menu-nojs` in the markup, so the rule at the foot of this file
+   takes it out of the document the moment the boot script sets
+   `data-qx-menu-js` — before the header is parsed, so it is never on screen for
+   a visitor who has scripting.
+
+   IT WAS THE ONLY WAY OUT ON A PHONE, and the panel starting below the bar is
+   what retired it: the toggle is uncovered now, it already turns into an X, and
+   one control that opens and closes is what the header was drawing twice.
+
+   Without scripting there is still nothing else. `:target` opens the panel and
+   only a link can un-target it — the fallback opener in the header cannot, its
+   href IS the panel's fragment — so this stays, pointing at the header's own
+   fragment. `display: none` and not a removal: there is no second markup to
+   serve, and the two paths must not need two components.
+
+   `align-self: flex-end` rather than an absolute position: the sheet is a flex
+   column and this is its first row, so the list below starts under it rather
+   than behind it. With scripting the row is gone entirely and the list is the
+   first thing in the sheet. */
+.qx-menu__close {
+  display: flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: var(--qx-space-2);
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+  border: var(--qx-stroke) solid var(--qx-line);
+  border-radius: var(--qx-radius-sm);
+  font-family: var(--qx-font-mono), ui-monospace, monospace;
+  font-size: var(--qx-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--qx-grey);
+  text-decoration: none;
+  transition:
+    color 200ms var(--qx-ease-out),
+    border-color 200ms var(--qx-ease-out);
+}
+
+.qx-menu__close:hover,
+.qx-menu__close:focus-visible {
+  border-color: var(--qx-green-dim);
+  color: var(--qx-white);
+}
+
+/* An X from the start — this one has no "Menu" state to rotate out of. It reuses
+   `.qx-menu-toggle__bar` so the two crosses on screen are one drawing. */
+.qx-menu__close-icon {
+  position: relative;
+  display: inline-flex;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+}
+
+.qx-menu__close-icon .qx-menu-toggle__bar:nth-child(1) {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.qx-menu__close-icon .qx-menu-toggle__bar:nth-child(2) {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.qx-menu__nav {
+  flex: 1;
+}
+
+.qx-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qx-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The item's box CLIPS its own label, which is what makes the entrance a rise
+   out of an edge rather than a slide across the panel. Same device as
+   `.qx-rise` in `styles/motion.css`, and the reason the site's type keeps
+   appearing from behind structure rather than from off-screen. */
+.qx-menu__item {
+  overflow: hidden;
+  line-height: 1;
+}
+
+.qx-menu__link {
+  position: relative;
+  display: inline-block;
+  /* 0.7em of gutter, and the current-page rule below spends it on the LEFT
+     instead of adding to it — see the note there. Written as a pair that sums to
+     a constant so the label's available width cannot depend on whether the row
+     is marked.
+
+     It was 2.4em while a number sat in a column at the item's right edge; the
+     gutter was that column's width and nothing else. With the number gone the
+     only claim on this space is the mark, so the constant is the mark. */
+  --qx-menu-mark: 0em;
+  padding-left: var(--qx-menu-mark);
+  padding-right: calc(0.7em - var(--qx-menu-mark));
+  font-family: var(--qx-font-display), system-ui, sans-serif;
+  font-size: var(--qx-text-xl);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--qx-white);
+  text-decoration: none;
+  transition: color 200ms var(--qx-ease-out);
+}
+
+.qx-menu__link:hover,
+.qx-menu__link:focus-visible {
+  color: var(--qx-green);
+}
+
+/* ---------------------------------------------------------------------------
+   THE PAGE YOU ARE ON.
+   ---------------------------------------------------------------------------
+   `aria-current="page"`, written by `lib/menu.ts` each time the panel opens —
+   the attribute assistive tech already reads for this, so the styling hook and
+   the accessible answer are one thing rather than a class shadowing it.
+
+   COLOUR ALONE WOULD NOT SAY IT. Hover is already green, so a green label is
+   "the pointer is here" and "this is where you are" drawn identically — and on
+   a phone, where nothing ever hovers, the visitor has no second state to read it
+   against. The rule in the margin is the part that carries the meaning; the
+   colour is what makes the rule belong to the word beside it.
+
+   The rule is drawn in the link's OWN padding rather than the item's, which
+   settles two things at once: every measurement below is in display-size `em`
+   and rescales with the `max-height` step further down; and it cannot be
+   clipped by the item's `overflow: hidden`, because it sits at the link's left
+   edge rather than outside it.
+
+   `top: 0.5em` and not `50%`: two of these labels wrap at the panel's narrower
+   widths, and a rule centred on a two-line box would float between the lines.
+   Aligned to the first line it stays beside the word it marks.
+
+   THE INDENT IS TAKEN OUT OF THE GUTTER, NOT ADDED TO IT — `--qx-menu-mark` is
+   subtracted from the link's `padding-right` up in the base rule, so the two
+   paddings sum to the same 0.7em whether the row is marked or not. Added, it
+   narrowed the marked label by 0.7em and moved its wrap point: swept 320–1920px
+   and the row you were ON broke to two lines at seven widths where the identical
+   label sat on one line every other time you opened the panel — "Contact Us"
+   over two lines at 820px, and only ever on `/who-we-are/contact`. Taken out of
+   the gutter the available width is a constant by construction, so there is no
+   width left to find.
+
+   No `:target` twin, unlike every other open rule in this file. The attribute is
+   written by the script and by nothing else, so there is no no-JS state here to
+   describe — without scripting the menu still opens and simply lights nothing. */
+
+.qx-menu__link[aria-current='page'] {
+  color: var(--qx-green);
+  --qx-menu-mark: 0.7em;
+}
+
+.qx-menu__link[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 0.42em;
+  height: var(--qx-stroke);
+  background: currentColor;
+  /* It arrives on the item's own beat. `--i` is set inline on the `<li>` and
+     inherits down to the link, so the rule fades in with the number on the row
+     it belongs to instead of being the one mark already sitting there when the
+     panel opens. */
+  opacity: 0;
+  transition: opacity 300ms var(--qx-ease-out);
+}
+
+[data-qx-menu] .qx-menu__link[aria-current='page']::before {
+  opacity: 1;
+  transition-delay: calc(280ms + var(--i, 0) * 40ms);
+}
+
+/* ELEVEN ITEMS AT DISPLAY SIZE DO NOT FIT A SHORT WINDOW. Measured at 360x640:
+   the list runs to 644px inside a 640px sheet, so "Contact Us" and the whole
+   socials block are below the fold and reachable only by scrolling a menu — and
+   a menu you scroll to see the last item of has stopped being a menu. One step
+   down the type scale at `lg` puts everything on screen with room over.
+
+   Keyed off HEIGHT, not width, because that is what the problem is: a 1280x600
+   laptop has the same eleven items in the same 420px column and the same
+   shortage of vertical space.
+
+   AFTER `.qx-menu__link`, and that is not tidiness. A media query carries no
+   specificity of its own, so this rule and the base one are equal and only
+   source order separates them — written above the base rule, as it was for one
+   round, it loses every time and the measurement comes back unchanged. */
+@media (max-height: 700px) {
+  .qx-menu__link {
+    font-size: var(--qx-text-lg);
+  }
+}
+
+/* NO NUMBER ON THESE ROWS, and it is not a styling preference.
+   A two-digit counter hung off each item for several rounds, on the reasoning
+   that every other counter on this site is two digits — the carousel's read
+   head, the pillar steps, the case-study index. Those three number things that
+   ARE a sequence: a position in a track, a step in an order, an entry in an
+   index. The menu is a set of destinations with no order at all, so the digits
+   asserted a first and a last where none exists, and the eye read them before
+   the words. Removed on the client's direction, and the reasoning agrees with
+   them: the site's counter idiom is for ordered things and this is not one.
+
+   The current page is still said twice over — the label goes green and the rule
+   appears in the left gutter — so nothing was carrying meaning here alone. */
+
+.qx-menu__label {
+  display: inline-block;
+  font-weight: 300;
+  /* 140% and not 100%: the label has to start fully below its own clipping box
+     including its descenders, and `rotate` swings the far corner further still.
+     At 100% the tail of a "g" is visible in the closed state. */
+  transform: translate3d(0, 140%, 0) rotate(8deg);
+  transform-origin: 50% 100%;
+  transition: transform 320ms cubic-bezier(0.55, 0, 1, 0.45);
+  will-change: transform;
+}
+
+/* THE STAGGER, and the whole of it. `--i` is set inline by the component from
+   the index it already has — the same device `[data-rv]` uses for its own
+   stagger, and no JavaScript reads or writes it. */
+[data-qx-menu] .qx-menu__label,
+html:not([data-qx-menu-js]) .qx-menu:target .qx-menu__label {
+  transform: translate3d(0, 0, 0) rotate(0deg);
+  transition-duration: 520ms;
+  transition-timing-function: var(--qx-ease-out);
+  /* 40ms apart and not the original's 100. Eleven items at 100 puts the last
+     label's arrival 1.25s after the tap with its own 640ms still to run — which
+     is a reveal to sit and watch rather than a menu to use. At 40 the whole
+     panel has settled inside 1.2s and the cascade still reads as a cascade. */
+  transition-delay: calc(200ms + var(--i, 0) * 40ms);
+}
+
+/* --------------------------------------------------------------------------- */
+
+.qx-menu__socials {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qx-space-2);
+  padding-top: var(--qx-space-4);
+  border-top: var(--qx-stroke) solid var(--qx-line);
+}
+
+.qx-menu__socials-title {
+  margin: 0;
+  font-family: var(--qx-font-mono), ui-monospace, monospace;
+  font-size: var(--qx-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--qx-grey);
+}
+
+.qx-menu__socials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qx-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qx-menu__social {
+  color: var(--qx-white);
+  text-decoration: none;
+  font-size: var(--qx-text-sm);
+  font-weight: 300;
+  transition:
+    color 200ms var(--qx-ease-out),
+    opacity 200ms var(--qx-ease-out);
+}
+
+/* The set dims and the hovered one does not — the original's one genuinely good
+   interaction detail, and cheap: two rules, no JavaScript, and it degrades to
+   nothing on a touch device that never fires hover. */
+.qx-menu__socials-list:hover .qx-menu__social:not(:hover),
+.qx-menu__socials-list:focus-within .qx-menu__social:not(:focus-visible) {
+  opacity: 0.4;
+}
+
+.qx-menu__social:hover,
+.qx-menu__social:focus-visible {
+  color: var(--qx-green);
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   The toggle's label, and the two bars.
+   ---------------------------------------------------------------------------
+   TWO OPENERS, ONE ON SCREEN. `#qx-menu-toggle` is the button `lib/menu.ts`
+   drives; `#qx-menu-open` is a plain link to the panel's fragment, which is the
+   whole no-JS path. The script sets `data-qx-menu-js` before the header below it
+   is parsed, so the swap has happened by first paint and a visitor never sees
+   both — or the wrong one.
+
+   `display: none` and not `visibility` or a class swap: the hidden opener must
+   be out of the tab order and out of the accessibility tree, and it must not
+   occupy a 44px slot in a header row that has two other controls in it.        */
+
+html:not([data-qx-menu-js]) .qx-menu-js {
+  display: none;
+}
+
+html[data-qx-menu-js] .qx-menu-nojs {
+  display: none;
+}
+
+/* The label slide is driven by the attribute for the scripted opener and by
+   `:target` for the link, which is the same pairing as every rule above — but it
+   cannot be written as a descendant of the panel, because the opener is in the
+   header and the panel is its sibling. `:has()` is the only selector that
+   reaches sideways, and this is the one place the file needs it. Where it is
+   unsupported the fallback opener simply keeps saying "Menu" while the panel is
+   open, which is a label that has stopped updating and not a broken menu. */
+html:not([data-qx-menu-js]):has(.qx-menu:target) .qx-menu-toggle__word {
+  transform: translate3d(0, -100%, 0);
+}
+
+html:not([data-qx-menu-js]):has(.qx-menu:target) .qx-menu-toggle__bar:nth-child(1) {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+html:not([data-qx-menu-js]):has(.qx-menu:target) .qx-menu-toggle__bar:nth-child(2) {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.qx-menu-toggle__words {
+  display: none !important;
+}
+
+[data-qx-menu] .qx-menu-toggle__arrow,
+html:not([data-qx-menu-js]):has(.qx-menu:target) .qx-menu-toggle__arrow {
+  transform: rotate(180deg);
+}
+
+.qx-menu-toggle__word {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  transition: transform 320ms var(--qx-ease-out);
+}
+
+/* Both words are in the DOM and the box shows one, so the button's width was
+   settled by the longer of the two before either was displayed and the header
+   does not reflow when the label changes. Moving the FIRST word is what moves
+   both — the second is in normal flow beneath it. */
+[data-qx-menu] .qx-menu-toggle__word {
+  transform: translate3d(0, -100%, 0);
+}
+
+.qx-menu-toggle__icon {
+  position: relative;
+  display: inline-flex;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+}
+
+.qx-menu-toggle__bar {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: var(--qx-stroke);
+  background: currentColor;
+  transition: transform 320ms var(--qx-ease-out);
+}
+
+/* A PLUS THAT BECOMES AN X, not the hamburger that becomes an X. Three bars
+   collapsing is the universal version and it is also the one shape on this site
+   that would come from somewhere else; a plus rotating 45 degrees is the same
+   gesture built from the two strokes the frame is already made of, and it is
+   what `.qx-plus` in `styles/motion.css` does on the FAQ accordion. Two
+   components with one idiom. */
+.qx-menu-toggle__bar:nth-child(1) {
+  transform: translateY(-50%) rotate(0deg);
+}
+
+.qx-menu-toggle__bar:nth-child(2) {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+[data-qx-menu] .qx-menu-toggle__bar:nth-child(1) {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+[data-qx-menu] .qx-menu-toggle__bar:nth-child(2) {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion.
+   ---------------------------------------------------------------------------
+   The panel still opens and still closes; it simply arrives. Every transition
+   here is cut to zero rather than the rules being switched off, because the
+   `visibility` delay is a transition too — remove it and the panel vanishes at
+   the instant a close begins, which for a reduced-motion visitor is correct and
+   for the transform underneath it would be a pane cut off mid-travel.
+
+   Not folded into the global `prefers-reduced-motion` rule in `globals.css`:
+   that one zeroes `animation` and `transition` site-wide already. This is here
+   so the file is legible on its own — a reader of these rules should not have to
+   know a stylesheet three imports away neutralises them.                       */
+
+@media (prefers-reduced-motion: reduce) {
+  .qx-menu,
+  .qx-menu__layer,
+  .qx-menu__sheet,
+  .qx-menu__label,
+  .qx-menu__link[aria-current='page']::before,
+  .qx-menu-toggle__word,
+  .qx-menu-toggle__bar {
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+}

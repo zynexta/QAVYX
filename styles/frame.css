@@ -1,0 +1,329 @@
+/* ---------------------------------------------------------------------------
+   The Q, worn by a DOM container — at two scales.
+   ---------------------------------------------------------------------------
+   The site has no navbar. Its navigation is a section of the homepage, and that
+   section is drawn as the brand mark: a rounded rectangle with its bottom-right
+   corner open, exactly the shape the hero's frame holds at every beat.
+
+   This file used to hold one class (`.qx-open-frame`, in `app/globals.css`) used
+   in exactly one place. It now holds the mark as a SYSTEM, because the whole
+   page wears it: every section is framed, and so is every card inside them.
+
+   ## Why that does not turn the mark into wallpaper
+
+   Because the two scales differ in three things at once — ink, weight and
+   surface — and none of them is decoration.
+
+   A SECTION frame is `--qx-green-dim` at `--qx-stroke-frame`, filled with
+   `--qx-ink`: it is the container, and there are four or five of them on a page.
+   A CARD frame is `--qx-frame-quiet` at `--qx-stroke-card`, filled with
+   `--qx-ink-raised` — the same green mixed back toward the hairline colour, a
+   third lighter, on the surface one step up — and it goes to the full
+   `--qx-green-dim` only on hover or focus-within. So a section reads as a frame
+   and a card reads as a surface with an edge, and the green means "you are
+   pointing at this" wherever it is at full strength.
+
+   Neither weight is `--qx-stroke`, and that is the correction the system
+   needed most: 1.5px is the weight of a RULE (the severed rule, the brutalist
+   lattice, the marquee's edges, the icons' stroke), and the frame is not a rule.
+   `styles/tokens.css` carries the whole argument beside the two constants.
+
+   WHAT IS HELD CONSTANT AT BOTH SCALES IS THE SHAPE OF THE OPENING, and getting
+   that right took a correction worth writing down. `--qx-open-gap-w` / `-h` are
+   19.8% and 24.7%, the mark's measured 84 x 72 bowl-opening against its 424 x
+   292 box — so as PERCENTAGES they reproduce the opening only on a box with the
+   mark's own 1.45:1 aspect ratio. A section is roughly that. A pillar card is
+   1240 x 370, and 19.8% x 24.7% of it is a 245 x 91 gash: three times as wide as
+   it is tall, which is not the Q's opening at any scale. It read as a border
+   that had failed to render, not as the mark.
+
+   So a card sets both axes in `rem`, the height derived from the width at
+   1.17:1 — the opening's own 84:72 almost exactly. That is the faithful reading
+   of the rule in `styles/tokens.css`: what makes the mark recognisable at
+   hairline weight is the proportion OF THE OPENING, and a percentage of the
+   container only tracks it while the container is the mark's shape.
+
+   IT USED TO BE `min(19.8%, 3.5rem)` BY `min(24.7%, 3rem)` — a cap per axis with
+   the percentage still governing below it — and that pair did not hold 1.17 at
+   all; measured, it delivered 0.92 to 2.18. The long note at `.qx-frame--card`
+   has the numbers and why only a derived pair can hold a ratio.
+
+   The radius changes too — the logo's own radius is proportional to its box, so
+   a 20px corner on a 180px-tall card is visibly rounder than the same corner on
+   a 700px-tall section.
+
+   UNLAYERED ON PURPOSE, and imported after `globals.css` for the same reason:
+   Tailwind's `utilities` layer beats `base` however specific a `base` selector
+   is, so a rule in `@layer base` would lose to a utility class on the same
+   element.
+
+   ## Why not an <svg>
+
+   The hero draws its frame with `computeFramePath`, which needs the box in
+   pixels. These containers' heights are whatever their content comes to, at
+   whatever width the viewport is — so an SVG would need a ResizeObserver feeding
+   React on every reflow, to redraw a shape CSS can express directly. Stretching
+   a fixed viewBox instead (`preserveAspectRatio="none"`) is worse: it distorts
+   the corner radii, and the radius is the part of this mark that was measured
+   hardest (BUILD-PLAN: an earlier 52.9px value made every corner visibly too
+   round).
+
+   ## The opening is a MASK, not four borders
+
+   Two mask layers whose UNION is the box minus a rectangle pinned to the
+   bottom-right corner: a full-width slab that stops `--qx-frame-gap-h` short of
+   the bottom, and a full-height slab that stops `--qx-frame-gap-w` short of the
+   right. Leaving that rectangle uncovered removes the end of the bottom edge,
+   the corner arc, and the bottom of the right edge in one operation, which is
+   precisely the three path segments `computeFramePath` leaves undrawn. Four
+   borders cannot do it: `border-radius` renders the corner arc as part of two
+   adjacent borders, so there is no way to drop the arc and keep both edges.
+
+   IT WAS `mask-composite: exclude` — the whole box XOR the gap rectangle — AND
+   THE CLIENT FOUND THE SEAM. Exclude is subtraction by arithmetic
+   (a1(1−a2) + a2(1−a1)), and inside the gap the two layers' rasterised alphas
+   are not the exact 1s that arithmetic needs: the gap rect's bottom and right
+   edges sit ON the box's own edges, every frame's height lands on a fraction of
+   a device pixel, and Chromium resolves the disagreement bilinearly. Wherever
+   the result was not exactly zero the 3px green border underneath showed
+   through — a faint hairline along the bottom of the opening and a ghost of the
+   corner arc, on every DOM frame on the site ("the gap has a small tiny green
+   part"). The hero's SVG frame never had it because a stroked path subtracts
+   nothing. Two ADDED slabs cannot have it: inside the gap neither layer exists,
+   so the alpha there is a plain 0 with no compositing math to get wrong.
+
+   The union also drops the `mask-composite` dependency entirely (the old rule
+   needed `-webkit-mask-composite: xor` for Safari below 15.4).
+
+   AND IT DEGRADES STRICTLY BETTER, which is the strongest argument for it after
+   the seam itself. There are two failure paths, not one, and the old rule's
+   claim ("if neither applies the border simply closes") was only true of the
+   first:
+
+   (a) `mask-image` never applies at all. The border draws in full and closes to
+       a plain rounded rectangle. Same before and after.
+   (b) `mask-size` fails while `mask-image` succeeds — the REALISTIC path, since
+       the sizes are `calc(100% - min(...))` over two tokens. A renamed token,
+       or `min()` unsupported (Chrome <79, Firefox <75, Safari <13.1), makes the
+       calc invalid at computed-value time and `mask-size` reverts to `auto`,
+       which on a gradient is the full positioning area. Under the UNION both
+       slabs become the full box and their union is the full box: the corner
+       closes, as documented. Under the OLD rule both layers became the full box
+       and were XOR'd — a1(1−a2)+a2(1−a1) with a1=a2=1 is 0 everywhere — so the
+       border vanished COMPLETELY, framing nothing at all.
+
+   Composite choice is therefore not degradation-neutral, and assuming it was is
+   the same assumption the seam came from.
+
+   `.qx-open-frame` is kept as a second name on the section-scale rule rather
+   than renamed away: `tests/e2e/phase8c-shell.spec.ts` reads the computed
+   `::before` of `#qx-index .qx-open-frame` layer by layer, and that assertion is
+   about the mark rather than about a class name. Both selectors resolve to
+   byte-identical computed style.
+                                                                              */
+
+.qx-frame,
+.qx-open-frame {
+  position: relative;
+
+  /* The frame's whole API. A modifier sets these; the ::before below is the
+     only thing that reads them, and it never appears twice. */
+  --qx-frame-stroke: var(--qx-green-dim);
+  --qx-frame-width: var(--qx-stroke-frame);
+  --qx-frame-radius: var(--qx-radius-lg);
+  --qx-frame-gap-w: var(--qx-open-gap-w);
+  --qx-frame-gap-h: var(--qx-open-gap-h);
+  /* THE INTERIOR, and it is the sixth member of the API rather than a rule of
+     its own so that a modifier can turn it off in the same breath it changes the
+     ink and the corner. See the note above. */
+  --qx-frame-fill: var(--qx-ink);
+
+  /* The frame is a lit surface, not an outline on the page.
+
+     `--qx-ink` is the token's own stated job — "frame interior, service panels"
+     — and it has meant that in exactly one place: the pinned hero, where
+     `#qx-stage` paints the design frame's interior and `#qx-ink-field` takes the
+     handoff. Every DOM frame on the site was drawing the same shape around bare
+     `--qx-black`, so the mark meant "workspace" for 940vh and then meant
+     "outline" for the rest of the page.
+
+     It also pays for the seam below. Sections used to be held apart by 128px of
+     empty page because a hairline on the same black was doing all the
+     separating; a filled surface with a 3px edge separates itself, which is what
+     lets the rhythm close up to the one seam the rest of the site already used.
+
+     THE FILL IS THE CLOSED SHAPE, exactly as it is in the hero: `computeFramePath`
+     keeps its `Z` even though the last ~10% is never stroked, because "the FILL
+     is the workspace interior and needs the closed shape". So the opening is a
+     break in the STROKE and never a bite out of the surface — the radius here
+     matches the border's and the corner stays filled under the missing edge.
+
+     The reveal does not animate it, and that is deliberate: #0a0c0b on #000000
+     is a 4% step, invisible until the border draws over it, so there is nothing
+     to fade and one less property moving during the frame's own construction. */
+  background-color: var(--qx-frame-fill);
+  border-radius: var(--qx-frame-radius);
+}
+
+.qx-frame::before,
+.qx-open-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: var(--qx-frame-width) solid var(--qx-frame-stroke);
+  border-radius: var(--qx-frame-radius);
+  /* Card frames light up on hover; a section frame never changes colour, so
+     this costs it nothing. The global reduced-motion block removes it. */
+  transition: border-color 200ms var(--qx-ease-out);
+  -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  -webkit-mask-size:
+    100% calc(100% - var(--qx-frame-gap-h)),
+    calc(100% - var(--qx-frame-gap-w)) 100%;
+  mask-size:
+    100% calc(100% - var(--qx-frame-gap-h)),
+    calc(100% - var(--qx-frame-gap-w)) 100%;
+  -webkit-mask-position:
+    0 0,
+    0 0;
+  mask-position:
+    0 0,
+    0 0;
+  /* THESE TWO LINES NOW HOLD THE OPENING OPEN, and under the old construction
+     they very nearly did not. `repeat` is the INITIAL value, so a tidy-up that
+     reads them as a restatement of the default deletes the mark: each slab is
+     smaller than the box on one axis, so either one alone tiles to cover the
+     whole box and the union closes the corner. Nothing throws, nothing goes
+     red, every other declaration here still looks right — the site just quietly
+     stops wearing the Q. (Old rule: layer 1 was `100% 100%`, which cannot tile,
+     so only the small gap rect needed this and losing it erased the whole
+     border instead — impossible to miss.) Asserted in phase8c-shell.spec.ts. */
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  /* NO mask-composite, and never again — the layers must UNION. `exclude` is
+     what left the seam in the gap; over these two slabs it does not restore the
+     old look, it XORs away their OVERLAP (the top-left rectangle), taking the
+     whole top edge except its rightmost gap-w and the whole left edge except
+     its bottom gap-h. The right and bottom edges — the two that meet the
+     opening — survive fully drawn, and the opening itself is unchanged. The
+     symptom is the mark's most CLOSED corner going missing, at the opposite end
+     of the box from the one you would go looking at. See the docblock. */
+}
+
+/* Card scale: quieter ink, a lighter stroke, a tighter corner, and an opening
+   that keeps its own 1.17:1 shape instead of stretching with the card — which is
+   true as of this change and was not before it; see the note above and the one
+   on the rule itself.
+
+   `--qx-ink-raised` AND NOT `--qx-ink`. A card inside a framed section is now
+   sitting ON the section's interior, so repeating the same fill would give it a
+   border and nothing else — and the note at the top of this file claims a card
+   reads "as a surface with an edge", which was only ever half true while the
+   surface was whatever was behind it. One step up is what makes that sentence
+   true. The three surfaces are then --qx-black (the page), --qx-ink (a section)
+   and --qx-ink-raised (a card), stepping evenly; see `styles/tokens.css`.
+
+   The stacked service list is the one place a card is the TOP-level surface —
+   `HeroStatic` has no section frame — and it takes the raised fill there too. On
+   black that reads as a card lifted off the page, which is what it is. */
+/* THE OPENING IS TWO FIXED LENGTHS, AND THE PERCENTAGES ARE GONE ON PURPOSE.
+
+   It was `min(19.8%, 3.5rem)` by `min(24.7%, 3rem)`, and the note at the top of
+   this file explains the intent exactly right: the mark is recognisable by the
+   PROPORTION of its opening, 84:72 — 1.17:1 — and a percentage of the container
+   only tracks that while the container is the mark's own shape. The caps were
+   there to hold 1.17 once a card grew past them.
+
+   THE PAIR NEVER HELD IT, because the two axes cap at different sizes: the width
+   caps past ~283px and the height past ~194px, so any card with one axis over
+   and the other under gets whatever falls out. Measured across all 50 cards on
+   twelve routes at four viewports, the delivered ratio ran from 0.92 to 2.18
+   against a designed 1.17 — at 1440 the worst card's opening was nearly twice as
+   wide as it should be for its height. The value the docblock guaranteed was
+   constant was in fact the one thing varying most.
+
+   Two lengths with the height DERIVED from the width is the only form that can
+   hold a ratio, because a percentage on the width axis resolves against width
+   and the same token on the height axis resolves against height — they cannot be
+   tied together while either is a percentage. Now a future edit to the width
+   keeps the shape by construction.
+
+   2rem AND NOT THE OLD 3.5rem, which is the client's call and the reason this
+   was reopened. At 3.5 the gap ate ~19% of a phone card's bottom edge, and with
+   one card per column on a phone — beside a section frame whose own opening is
+   over a thousand pixels away and off-screen — a closed rectangle next to an
+   open one reads as the open one being broken, not as the mark. Reported as
+   exactly that: the frame "not fully expand". Three widths were rendered and
+   compared; at 2rem it reads as a deliberate notch and the Q survives.
+
+   NO `min()` SAFETY FLOOR, and that is deliberate rather than an omission. The
+   smallest card anywhere on the site is 224 x 135, where this is 14% of the
+   width and 20% of the height — smaller than the 19.8/24.7 it replaces, on both
+   axes, on the very card that would have needed protecting. Any percentage guard
+   low enough to protect a hypothetical tiny card engages on real 135px-tall ones
+   and brings the drift straight back. If a much smaller card ever ships, shrink
+   this pair rather than reintroducing a percentage. */
+.qx-frame--card {
+  --qx-frame-stroke: var(--qx-frame-quiet);
+  --qx-frame-width: var(--qx-stroke-card);
+  --qx-frame-radius: var(--qx-radius-md);
+  --qx-frame-gap-w: 2rem;
+  --qx-frame-gap-h: calc(var(--qx-frame-gap-w) / 1.17);
+  --qx-frame-fill: var(--qx-ink-raised);
+}
+
+/* `:focus-within` and not only `:hover`, so a keyboard user reaching a link
+   inside a card gets the same confirmation a mouse user does. Neither is the
+   sole indicator of anything: the links inside carry their own focus ring and
+   their own colour change. */
+.qx-frame--card:hover,
+.qx-frame--card:focus-within {
+  --qx-frame-stroke: var(--qx-green-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   The draw — the signature.
+   ---------------------------------------------------------------------------
+   A section frame does not fade in. It is REVEALED BY A DIAGONAL sweeping from
+   the top-left corner, which is the mark's most closed corner, to the
+   bottom-right, which is its opening. The last stroke to arrive is the pair of
+   round caps either side of the gap — so the reveal finishes on the brand's own
+   incompleteness rather than on a completed rectangle.
+
+   That is the one thing on this page that is allowed to be showy, and it is the
+   reason cards do NOT draw: they fade and lift inside a frame that has already
+   been drawn (`styles/motion.css`). Spending the effect everywhere would spend
+   it nowhere.
+
+   It is also a movement the project's governing motion rule has a name for.
+   "If a movement cannot be called discovery, confirmation, construction,
+   navigation or transition, cut it" — this is CONSTRUCTION: the mark being
+   drawn, in the order a pen would draw it.
+
+   A `clip-path` triangle rather than an animated `mask-size`, and the choice is
+   load-bearing twice over. `clip-path` is composited and does not re-paint the
+   border every frame; and it leaves `mask-size` alone, which is what
+   `phase8c-shell.spec.ts` reads off `#qx-index` to prove the opening is sized
+   from the mark. An animated mask would have made that assertion depend on
+   whether the section had scrolled into view yet.
+
+   210%, not 300%. The triangle's hypotenuse runs from (2.1w, 0) to (0, 2.1h),
+   and it clears the box's own bottom-right corner at exactly t = 2 — so at 210%
+   the shape has just finished covering the frame and no part of the tween is
+   spent invisibly widening a triangle that is already off-screen. At 300% the
+   final third of the easing curve, which is where an expo-out spends most of its
+   TIME, would have nothing left to reveal.                                     */
+html[data-qx-motion='on'] .qx-frame[data-reveal]::before,
+html[data-qx-motion='on'] .qx-open-frame[data-reveal]::before {
+  clip-path: polygon(0% 0%, 210% 0%, 0% 210%);
+  transition:
+    clip-path var(--qx-rv-frame) var(--qx-ease-rise),
+    border-color 200ms var(--qx-ease-out);
+}
+
+html[data-qx-motion='on'] .qx-frame[data-reveal]:not([data-revealed])::before,
+html[data-qx-motion='on'] .qx-open-frame[data-reveal]:not([data-revealed])::before {
+  clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
+  transition-delay: 0s;
+}

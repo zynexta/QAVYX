@@ -1,0 +1,164 @@
+/* ---------------------------------------------------------------------------
+   The process line down /growth-marketing.
+   ---------------------------------------------------------------------------
+   ONE ROUTE WEARS THIS, and the reason is in `content/pillars.ts`: Growth
+   Marketing's five sections are §13–§17, "Step 01".."Step 05", a process that
+   runs in order. It is the only pillar with `ordered: true`, the only one whose
+   rail prints a counter, and therefore the only one where a line joining the
+   sections is a statement rather than a decoration. The other four pillars are
+   menus — `PillarPage`'s docblock records that numbering them would imply a
+   sequence the client did not write, and so would this.
+
+   ## What it fixes
+
+   The rail is `minmax(0, 15rem)` and holds a two-character number and a name.
+   The copy column beside it runs to three or four times that height, and a grid
+   row is as tall as its tallest cell, so every card on this page has roughly a
+   quarter of a metre of empty rail under the section's name. Five cards, five
+   holes, and nothing anywhere saying the five are one thing in sequence — the
+   page reads as five boxes that happen to be numbered.
+
+   ## Why it is CSS and not an <svg>
+
+   Same answer `styles/frame.css` gives for the Q: the geometry depends on the
+   height of every card, and a card is as tall as its copy at whatever width the
+   viewport is. An SVG would need a ResizeObserver feeding React on every reflow
+   to draw a straight line.
+
+   ## The construction, and the one thing that would break it
+
+   Each card draws its OWN segment, overflowing half the list gap at each end, so
+   consecutive segments meet in the middle of the gap. The alternative — one line
+   on the <ol>, behind everything — cannot work: `.qx-frame--card` fills each
+   card with `--qx-ink-raised`, and a later sibling paints over an earlier one, so
+   a single background line would be visible in the four gaps and hidden inside
+   the five boxes. Which is the exact opposite of the point.
+
+   THE THREE LENGTHS BELOW ARE THE CARD'S OWN SPACING, and they are the coupling
+   to watch. `--qx-space-5` is the card's `p-5`, `--qx-space-4` is the list's
+   `gap-4`, and the pair of them is what makes a segment stop exactly halfway
+   across the gap. Change the padding or the gap in `PillarPage` without changing
+   them here and the line does not vanish — it develops a step at every seam,
+   which is the kind of wrong that ships. `--qx-mid` is the other half of it: the
+   counter is `text-2xs` with no `leading-*` utility, so its line box is
+   `--qx-leading-body`, and half of that is where the node has to sit to be level
+   with the digits.
+
+   ## md and up, like every other figure on an inner page
+
+   Below `md` the card's grid collapses to one column and the rail becomes a
+   full-width row above the copy. A vertical line down its left edge would then
+   run through the description and the bullets rather than beside them.
+   `InnerPage`'s aside and the section figures both stop at the same breakpoint
+   for the same reason: below it, the copy is what matters. 768px is `md` in
+   `tailwind.config.ts`.
+
+   Unlayered and imported after `globals.css`, like every other stylesheet in
+   this directory — see the note beside the imports in `app/layout.tsx`.        */
+
+/* The rail is the positioning context whether or not the spine is drawn: it is
+   a grid item, so it stretches to the row's full height, which is what gives the
+   segment something to be 100% of. */
+.qx-spine-rail {
+  position: relative;
+}
+
+/* Nothing below `md`, and nothing in the DOM's way either — the element stays
+   for the markup to be one shape at every width, but it lays out nothing. */
+.qx-spine-mark {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  /* The gutter the line runs in. 1.5rem leaves 14px of air between a 10px node
+     and the first digit, and it is taken out of the rail's 15rem rather than out
+     of the card's 2.5rem padding on purpose: at 20px from the card's left edge
+     the line would run parallel to the frame's own border and read as a second
+     border that had half rendered. Inside the text column it reads as what it
+     is. */
+  .qx-spine-rail {
+    padding-left: var(--qx-space-4);
+  }
+
+  .qx-spine-mark {
+    /* Card padding plus half the list gap: how far the segment reaches past its
+       own card at each end. */
+    --qx-reach: calc(var(--qx-space-5) + var(--qx-space-4) / 2);
+    /* Half the counter's line box — the node's centre, measured from the top of
+       the rail — plus the reach above it. Distance from the segment's top to the
+       node it belongs to. */
+    --qx-lead: calc(var(--qx-reach) + var(--qx-text-2xs) * var(--qx-leading-body) / 2);
+    --qx-node: 0.625rem;
+
+    display: block;
+    position: absolute;
+    left: 0;
+    top: calc(-1 * var(--qx-reach));
+    bottom: calc(-1 * var(--qx-reach));
+    width: var(--qx-node);
+    /* `--qx-line` is the ink for a figure on `--qx-black`; a card is
+       `--qx-ink-raised`, where it measures 1.14:1 and would not be a quiet line
+       but an invisible one. The grey carries its quiet in the opacities below.
+       See the ratios in `styles/tokens.css`. */
+    color: var(--qx-grey);
+    pointer-events: none;
+  }
+
+  /* The run. `--qx-stroke` and not `--qx-stroke-card`: 1.5px is this site's
+     weight for a RULE — the severed rule, the lattice, the marquee's edges — and
+     that is what this is. The frame weights belong to the mark. */
+  .qx-spine-mark::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: var(--qx-stroke);
+    margin-left: calc(var(--qx-stroke) / -2);
+    background-color: currentColor;
+    opacity: 0.45;
+  }
+
+  /* The node. Its fill is the card's own surface so the run is punched out
+     behind it and the ring reads as a station on the line rather than as a bead
+     threaded onto it. */
+  .qx-spine-mark::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--qx-lead);
+    box-sizing: border-box;
+    width: var(--qx-node);
+    height: var(--qx-node);
+    margin-top: calc(var(--qx-node) / -2);
+    border: var(--qx-stroke) solid currentColor;
+    border-radius: 50%;
+    background-color: var(--qx-ink-raised);
+    opacity: 0.7;
+  }
+
+  /* THE LINE HAS A START AND AN END, which is the difference between a process
+     and a rail. It begins at 01's node and stops at 05's; it does not enter the
+     page above the first card or leave below the last. The ~250px of empty rail
+     under 05 stays empty, because the process is over — a line running on past
+     its own last step to the bottom of the box would be saying there is a step
+     six. */
+  .qx-spine > li:first-child .qx-spine-mark::before {
+    top: var(--qx-lead);
+  }
+
+  .qx-spine > li:last-child .qx-spine-mark::before {
+    bottom: auto;
+    height: var(--qx-lead);
+  }
+
+  /* The one green mark on the page, and it is the arrival: §17 is "Growth &
+     Success", the step the other four exist to reach. Filled rather than hollow
+     because it is a terminus and the run stops in it — five identical rings, one
+     of them green, would say the fifth is another station on a line that carries
+     on somewhere. */
+  .qx-spine > li:last-child .qx-spine-mark::after {
+    border-color: var(--qx-green);
+    background-color: var(--qx-green);
+    opacity: 1;
+  }
+}

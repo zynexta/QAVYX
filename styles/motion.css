@@ -1,0 +1,402 @@
+/* ---------------------------------------------------------------------------
+   The reveal layer, and the accordion.
+   ---------------------------------------------------------------------------
+   ## The contract, and why every rule here is prefixed
+
+   THE PAGE IS VISIBLE. Not "visible after hydration", not "visible unless
+   JavaScript fails" — the served HTML paints its content, and nothing in this
+   file applies to it. Every rule that hides anything is nested under
+   `html[data-qx-motion='on']`, an attribute set by one inline script in
+   `app/layout.tsx` that refuses to set it when the visitor has asked for reduced
+   motion or the browser has no IntersectionObserver.
+
+   That is the same deal `HeroStatic` and `LaunchStatic` already have with the
+   pinned sequence, and it is the only arrangement that satisfies both of this
+   project's standing criteria at once: the JS-disabled DOM equals the
+   reduced-motion DOM, and no visitor sees a flash of the un-enhanced version.
+   The attribute is written by a blocking inline script that runs before the
+   body's content is parsed, so the decision is taken before first paint — which
+   `useState` + an effect, or `useSyncExternalStore`, could only take after one.
+
+   It is also the reason a scroll reveal here does not cost the thing this
+   codebase has protected everywhere else: crawlers, and readers with the
+   animation off, are never served `opacity: 0`.
+
+   ## Why not GSAP ScrollTrigger
+
+   GSAP is already a dependency and the homepage already loads it — but only
+   inside `HeroMount`, behind a `next/dynamic(..., { ssr: false })` boundary, so
+   the eleven inner routes ship ZERO client JavaScript today. Hanging a fade off
+   ScrollTrigger would put ~62 KB and a hydration boundary on every one of them
+   to move some text nine pixels. An IntersectionObserver in an inline script is
+   about a kilobyte, needs no boundary, and survives client-side navigation via
+   the MutationObserver beside it.
+
+   ## Two devices, and each is used in exactly one register
+
+   `.qx-rise`  — a true masked rise: the line is clipped by its own box and
+                 translated up out of it. Reserved for DISPLAY-SIZE headings, of
+                 which there is at most one or two per section. It is the most
+                 expensive-looking thing here and it stays rare.
+   `[data-rv]` — everything else: a wipe down the block's own top edge plus a
+                 9px lift. Type appearing from behind an edge is what the rest of
+                 this site is made of (`border-qx-line`, `.qx-severed-rule`), so
+                 the copy reads as rising out of the document's own structure.
+
+   Stagger is `--i` on the element, set inline by the component from the index it
+   already has. No JS reads or writes it.
+
+   ## Two properties here are not `transform` or `opacity`, on purpose
+
+   The usual rule is to animate only those two, because everything else can cost
+   a layout or a paint per frame. Both departures are deliberate and both are
+   bounded:
+
+   `clip-path` on `[data-rv]`. Composited in every current engine for a simple
+   `inset()`, and it is the wipe — without it this is a fade-and-slide, which is
+   the generic answer. It runs once per element, never on scroll.
+
+   `block-size` on `::details-content`. A genuine layout animation, and the only
+   way to open a `<details>` to its own height without JavaScript measuring it.
+   One row at a time, on a press the user made, at 300ms. The alternative was a
+   React accordion on a route that currently ships no client JavaScript at all.
+
+   Nothing here is transitioned with `all`, and every rule lists its properties.
+
+   The `--qx-rv-lead` offset is the whole reason the section reads as one event
+   rather than two: the frame (`styles/frame.css`) begins its diagonal draw at
+   0ms and the copy inside it starts at 90ms, so the container appears to arrive
+   first and the type to land in it.                                            */
+
+/* ---------------------------------------------------------------------------
+   Content blocks.
+   ---------------------------------------------------------------------------
+   `clip-path` and not `overflow` on a wrapper: these are paragraphs, lists,
+   grids and whole cards, and wrapping each of them in an extra element to get a
+   clipping box would be a DOM change for a visual effect. The resting value is a
+   NEGATIVE inset rather than `none`, because `none` is not interpolable — and
+   -50% is far enough outside every one of these boxes that no focus ring, no
+   hover outline and no chip's border is ever clipped once the reveal has run. */
+html[data-qx-motion='on'] [data-rv] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(-50% -50% -50% -50%);
+  transition:
+    opacity var(--qx-rv-dur) var(--qx-ease-out),
+    transform var(--qx-rv-dur) var(--qx-ease-out),
+    clip-path var(--qx-rv-dur) var(--qx-ease-out);
+  transition-delay: calc(var(--qx-rv-lead) + var(--i, 0) * var(--qx-rv-step));
+}
+
+/* The second selector is for an element that is BOTH the trigger and the item —
+   a lone heading sitting outside the frame it introduces, which is the shape
+   `SiteIndex` and `SectionIndex` already have. Without it those headings would
+   be observed and never hidden, and would pop in ahead of the section they
+   name. */
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) [data-rv],
+html[data-qx-motion='on'] [data-rv][data-reveal]:not([data-revealed]) {
+  opacity: 0;
+  /* 0.55rem. Small enough that it reads as a fade with weight rather than as a
+     slide — the motion database's own note on subtle scroll reveals, and the
+     right call on a page whose pinned hero has already moved a great deal. */
+  transform: translate3d(0, 0.55rem, 0);
+  clip-path: inset(0 0 100% 0);
+  /* Delays are for the way IN. Reversing a staggered exit makes the last item
+     hang around after everything else has gone. */
+  transition-delay: 0s;
+}
+
+/* Character slide-in entrance from left */
+html[data-qx-motion='on'] [data-rv-character] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--qx-rv-lead) + var(--i, 1) * var(--qx-rv-step));
+}
+
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) [data-rv-character] {
+  opacity: 0;
+  transform: translate3d(-4.5rem, 0, 0);
+  transition-delay: 0s;
+}
+
+/* ---------------------------------------------------------------------------
+   Display headings.
+   ---------------------------------------------------------------------------
+   ONE mask around the whole heading, not one per line. Splitting a heading into
+   per-line or per-character elements is what SplitText is for; it is a paid
+   plugin, it multiplies the DOM, and it has to be reverted on unmount or it
+   leaves a screen reader reading a headline one character at a time. A two-line
+   heading rising as a block is not the lesser version of that effect — it is the
+   quieter one, and the only one that survives a re-wrap at another viewport.
+
+   `overflow: clip` rather than `hidden`, so the element does not become a scroll
+   container (a `hidden` ancestor is what makes a browser scroll a focused child
+   into view by shifting the box). `hidden` is declared first as the fallback.
+
+   The padding/margin pair is for descenders: `clip` cuts at the content box, and
+   the tail of a `g` or `y` on the last line sits below it.                     */
+.qx-rise {
+  display: block;
+  overflow: hidden;
+  overflow: clip;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.qx-rise > span {
+  display: block;
+  /* On the span, not on `.qx-rise`: the span is the block that contains the
+     text, and balancing is what stops the one line the page raises its voice for
+     breaking with a single word on the last line. Every heading wearing this is
+     under `max-w-[20ch]`-ish and well inside the ~6-line ceiling browsers apply
+     to `balance`. */
+  text-wrap: balance;
+}
+
+html[data-qx-motion='on'] .qx-rise > span {
+  transform: none;
+  opacity: 1;
+  transition:
+    transform var(--qx-rv-rise) var(--qx-ease-rise),
+    /* Deliberately shorter than the rise and deliberately NOT a token: the line
+       is opaque well before it has finished travelling, so the mask is what the
+       eye reads rather than a fade. It moved with the rest of the set when the
+       client asked for a slower reveal (420 -> 580), keeping the same ~0.56 of
+       `--qx-rv-rise` it has always been. */
+      opacity 580ms linear;
+  transition-delay: calc(var(--qx-rv-lead) + var(--i, 0) * var(--qx-rv-step));
+}
+
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-rise > span,
+html[data-qx-motion='on'] .qx-rise[data-reveal]:not([data-revealed]) > span {
+  /* 110%, so the line starts fully below its own mask with a little clearance
+     for the descender padding above. */
+  transform: translate3d(0, 110%, 0);
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+/* ---------------------------------------------------------------------------
+   The accordion — §60's fourteen questions, still with no client JavaScript.
+   ---------------------------------------------------------------------------
+   `<details>` opens and closes, is keyboard operable, is announced correctly, is
+   Ctrl+F-findable and prints. What it has never done is animate, because a
+   closed `<details>` sets its content to `content-visibility: hidden` — a
+   discrete property, so there was nothing to transition between.
+
+   `::details-content` plus `transition-behavior: allow-discrete` is the platform
+   answering exactly that, and `interpolate-size: allow-keywords` is what makes
+   `block-size: auto` an interpolable endpoint so the panel can animate to its
+   own height without JavaScript measuring it. Together they are the reason this
+   page can get a smooth open and close and STAY a server component with no
+   hydration boundary — which is the property the FAQ route was built around.
+
+   Where `::details-content` is not supported the selector does not match, the
+   panel opens instantly, and every other behaviour is unchanged. The global
+   `prefers-reduced-motion` block in `app/globals.css` collapses the duration.
+
+   `overflow: clip` while the height is animating, or the answer's text spills
+   out below the summary of the next question for the length of the tween.      */
+:root {
+  interpolate-size: allow-keywords;
+}
+
+.qx-disclosure::details-content {
+  block-size: 0;
+  overflow: hidden;
+  overflow: clip;
+  opacity: 0;
+  transition:
+    block-size var(--qx-disclosure-dur) var(--qx-ease-out),
+    opacity calc(var(--qx-disclosure-dur) - 80ms) var(--qx-ease-out),
+    content-visibility var(--qx-disclosure-dur) allow-discrete;
+}
+
+.qx-disclosure[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   The + / − .
+   ---------------------------------------------------------------------------
+   Two bars, one of which collapses — not two glyphs swapped on `[open]`. The
+   swap could not be animated (there is nothing between "+" and "−" to
+   interpolate) and it put both characters in the summary's text content, where
+   a screen reader announcing a `<details>` state it has already announced is
+   noise. This is one `aria-hidden` element with no text in it at all.
+
+   `rotate(90deg) scaleX(0)` and not `scaleY(0)`: the bar is authored horizontal
+   and rotated, so its own x-axis is the one running along its length. Scaling
+   that collapses it to a point at the centre of the cross, which is what makes
+   the plus close into the minus rather than shrink away from it.
+
+   Sized in `rem` and positioned by the summary's flex row rather than given a
+   tap target of its own — the whole `<summary>` is the control, and it is the
+   full width of the row.                                                       */
+.qx-plus {
+  position: relative;
+  display: block;
+  flex: none;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  color: var(--qx-grey);
+  transition: color 200ms var(--qx-ease-out);
+}
+
+.qx-plus::before,
+.qx-plus::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(50% - var(--qx-stroke) / 2);
+  block-size: var(--qx-stroke);
+  background-color: currentColor;
+  transition: transform 260ms var(--qx-ease-out);
+}
+
+.qx-plus::after {
+  transform: rotate(90deg);
+}
+
+.qx-disclosure[open] .qx-plus {
+  color: var(--qx-green);
+}
+
+.qx-disclosure[open] .qx-plus::after {
+  transform: rotate(90deg) scaleX(0);
+}
+
+@keyframes qx-float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.qx-animate-float {
+  animation: qx-float-gentle 5s ease-in-out infinite;
+}
+
+/* ===========================================================================
+   Solution Section Sequential Entrance Animation
+   ===========================================================================
+   Orchestration when [data-reveal] triggers [data-revealed]:
+   1. Heading fades and glides down into position (0.05s delay)
+   2. 3D Character enters FIRST from the LEFT into CENTER (0.15s delay, 1.05s smooth ease)
+   3. 4 Cards enter ONE BY ONE (sequential stagger: 0.45s, 0.65s, 0.85s, 1.05s)
+   Resting state preserves 100% of the exact 3D perspective, scale, and hover effects!
+   =========================================================================== */
+
+/* 1. Solution Heading */
+html[data-qx-motion='on'] .qx-solution-header {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.05s;
+}
+
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-solution-header {
+  opacity: 0;
+  transform: translate3d(0, -20px, 0);
+  transition-delay: 0s;
+}
+
+/* 2. Central 3D Character (Slides in smoothly from LEFT into CENTER) */
+html[data-qx-motion='on'] .qx-solution-char-wrapper {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.15s;
+}
+
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-solution-char-wrapper {
+  opacity: 0;
+  transform: translate3d(-140px, 0, 0);
+  transition-delay: 0s;
+}
+
+/* 3. Cards Entrance (One-by-one sequential stagger) */
+html[data-qx-motion='on'] .qx-solution-card-wrapper {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Left-column cards enter from left: Card 01 and Card 03 */
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-solution-card-left {
+  opacity: 0;
+  transform: translate3d(-60px, 20px, 0);
+  transition-delay: 0s;
+}
+
+/* Right-column cards enter from right: Card 02 and Card 04 */
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-solution-card-right {
+  opacity: 0;
+  transform: translate3d(60px, 20px, 0);
+  transition-delay: 0s;
+}
+
+/* Mobile cards enter from bottom; reset transform to none when revealed for flawless position sticky */
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-solution-card-mobile {
+  opacity: 0;
+  transform: translate3d(0, 36px, 0);
+  transition-delay: 0s;
+}
+
+html[data-qx-motion='on'] [data-revealed] .qx-solution-card-mobile {
+  transform: none;
+}
+
+/* Sequential Stagger Delays (1 -> 2 -> 3 -> 4) */
+html[data-qx-motion='on'] .qx-solution-card-1 {
+  transition-delay: 0.45s;
+}
+html[data-qx-motion='on'] .qx-solution-card-2 {
+  transition-delay: 0.65s;
+}
+html[data-qx-motion='on'] .qx-solution-card-3 {
+  transition-delay: 0.85s;
+}
+html[data-qx-motion='on'] .qx-solution-card-4 {
+  transition-delay: 1.05s;
+}
+
+/* Mobile Character Avatar (Slides in from left) */
+html[data-qx-motion='on'] .qx-solution-mobile-char {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.15s;
+}
+
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-solution-mobile-char {
+  opacity: 0;
+  transform: translate3d(-70px, 0, 0);
+  transition-delay: 0s;
+}
+
+/* Accessibility: Reduced motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .qx-solution-header,
+  .qx-solution-char-wrapper,
+  .qx-solution-card-wrapper,
+  .qx-solution-mobile-char {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

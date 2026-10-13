@@ -1,0 +1,203 @@
+/**
+ * The scrubbed launch film's layer. See `components/launch/RocketVideo.tsx` for
+ * what it is and `motion/timelines/rocketVideoTimeline.ts` for what moves it.
+ *
+ * A stylesheet rather than inline styles for the same reason `flame.css` is one:
+ * every other stylesheet on this site lives in `styles/`, and the reduced-motion
+ * backstop at the bottom needs a media query, which an inline `style` object
+ * cannot express at all.
+ */
+
+#qx-rocket-film {
+  /* FIXED, and a sibling of the pinned section — never inside it. A pin puts a
+     transform on its spacer and a transform is a containing block for
+     `position: fixed`, so a layer nested in the pinned subtree would stop being
+     fixed and scroll away in the first 100vh. Every visual on this pin follows
+     the same rule.
+
+     Out of flow is also the whole of this section's layout-shift story: the
+     element reserves no space at any point, so nothing below it can move as the
+     film loads, decodes, or fails to. */
+  position: fixed;
+  inset: 0;
+
+  /* THE POSTER LIVES HERE NOW, and it is doing the job an attribute used to.
+     A `<video>` carried `poster` for the gap before the first frame decoded, and
+     the same image doubled as the FAILURE STATE — on 2026-08-31 a renamed asset
+     404'd and the launch beat played 320vh of black, which is what that poster
+     exists to prevent. A canvas has no `poster`, so the image sits behind it as
+     this layer's background: the first painted frame covers it, and if the
+     frames never arrive at all the visitor still sees the tower rather than a
+     void. Sized and positioned to match the canvas's own `cover`. */
+  background-image: url('/launch-frames-v1/poster.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* Between the ink field (8) and the stage (10) — the slot the SVG rocket used
+     to occupy from INSIDE the stage. Above the ink field, because the aperture
+     has just filled the screen with it and the film has to be on top of that
+     flat black; below the stage, because the frame's stroke is still flying
+     outward up there and the pin's own layers must keep outranking this one. */
+  z-index: var(--qx-z-rocket);
+
+  /* A full-viewport fixed element that covers every section below the pin for
+     the rest of the document. Without this it swallows their clicks — which is
+     exactly what `#qx-stage` once did to the entire site navigation. Nothing in
+     here is interactive, so nothing opts back in. */
+  pointer-events: none;
+
+  /* THE AT-REST STATE ONLY. `addRocketVideoSegment` owns both properties from
+     the first frame of the launch segment onward and hands the screen back by
+     driving them to 0 again before the pin releases. Nothing in React writes
+     either one — a `style` prop would be re-asserted by every resize re-render
+     and fight the scrub. */
+  visibility: hidden;
+  opacity: 0;
+
+  /* No background of its own. Portrait is full-bleed and has no bars at all;
+     landscape and the ultra-narrow cap below do letterbox, and what shows through
+     there is `body`, which is `--qx-black` — measured, the bars sample 000000.
+
+     NOT the ink field, which is the obvious guess and is wrong twice over:
+     `--qx-ink` is #0a0c0b rather than pure black, and `#qx-ink-field` is at
+     opacity 0 for the whole of the launch segment anyway (swept across progress
+     0.68-0.90). If its fade is ever retimed to overlap this layer's, the bars
+     would start showing a #000000/#0a0c0b edge — this is the note that says so. */
+  background: none;
+
+  /* The ultra-narrow rule at the bottom sizes the film WIDER than the viewport
+     on purpose. This is what keeps that overflow inside the layer rather than on
+     the page, where it would be a horizontal scrollbar across the whole site.
+     (Portrait's `object-fit: cover` clips itself and needs no help.) */
+  overflow: hidden;
+}
+
+#qx-rocket-film canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  /* CONTAIN IN LANDSCAPE, AND THE FILM'S OWN GEOMETRY IS WHY.
+
+     Measured off the master, column by column and row by row, rather than eyed:
+
+       - the subject needs the central 43% of the WIDTH at the opening tower
+         shot, 55% at ignition, and 15% once the vehicle is in flight. Only the
+         ground cloud at frame 120 reaches the side edges, and that is
+         atmosphere, not content.
+       - the subject needs 96-98% of the HEIGHT in every frame of the first two
+         thirds. The vehicle's nose is at y 0.12 and the pad's base at y 0.98.
+
+     So the frame has a lot of horizontal slack and essentially NO vertical
+     slack. `cover` on a viewport WIDER than the film scales to the width and
+     eats the height — at 21:9 it would take 25% of it, which is the nose cone
+     and the launch pad. There is no aspect at which that is an acceptable trade,
+     so a wider-than-16:9 viewport keeps every row and accepts bars at the sides.
+     They are not visible as bars: the film's own background is black and so is
+     everything behind it.
+
+     THIS IS THE DEFAULT AND IT ONLY EVER APPLIES ABOVE 16:9 — see the rule
+     below, which takes everything narrower than the film. */
+  object-fit: contain;
+  object-position: center;
+
+  /* Belt and braces for the LETTERBOXED cases — landscape and the ultra-narrow
+     cap — where the film's own black edges could read as a seam on a display that
+     renders 0,0,0 differently from the page's. Under portrait's `cover` the box
+     is fully painted and there is no edge for a seam to form at, so there this
+     declaration is simply inert. Same token the rest of the site paints on. */
+  background-color: var(--qx-black);
+}
+
+/**
+ * ANYTHING NARROWER THAN THE FILM IS FULL-BLEED, BECAUSE THAT IS THE CASE WITH
+ * THE SLACK.
+ *
+ * ## This said `orientation: portrait` and that was the bug
+ *
+ * The client resized the window and found black bands above and below the film.
+ * The old predicate assumed "landscape" meant "wider than the film", and it does
+ * not: landscape is only `width > height`, so EVERY aspect between 1.000 and
+ * 1.778 is a landscape viewport NARROWER than 16:9. There `contain` fits to the
+ * width and letterboxes the height — the exact bars the note above promised
+ * could not happen, on the axis it said they would not be on. Measured at
+ * 1200x800: the film painted 1200x675 with 63px of black top and bottom, and at
+ * the 899x898 the client was sitting on it was 196px.
+ *
+ * The right predicate is the one the argument was always about — is the viewport
+ * narrower than the film? — so it is stated as that. `max-aspect-ratio: 16/9`
+ * covers portrait, square and sub-16:9 landscape in one rule, and portrait was
+ * only ever a subset of it.
+ *
+ * Any viewport narrower than 16:9 has `cover` scale to the HEIGHT and crop the
+ * WIDTH — the axis the measurements above say has room. It never removes a
+ * single row, so the nose cone and the pad are safe by construction, not by
+ * tuning.
+ *
+ * THE BOUNDARY AT 16:9 IS CONTINUOUS, the same property the 4:9 cap below has:
+ * at exactly 16/9 the film fills the box, so `contain` and `cover` are the same
+ * picture and a drag across the line changes nothing.
+ *
+ * WHAT THIS REPLACED, so nobody re-derives it. This started as `contain`, which
+ * painted a 390x219 band on a 390x844 phone — 26% of the screen, the rest black.
+ * Scaling it to `max(contain-height, 50svh)` doubled the band and still left half
+ * the screen black, which is what the client saw and rejected. Both were the same
+ * mistake: protecting horizontal pixels that the film does not need protected.
+ *
+ * WHAT THE CROP ACTUALLY COSTS — AND MEASURE IT ON THE IGNITION FRAME.
+ *
+ * The floor was first taken from the opening tower shot, where the longest row,
+ * UNPROFESSIONAL EXECUTION, spans about 21% of the frame width. That produced a
+ * 22% answer and it was WRONG, because that row is at its NARROWEST there. At
+ * ignition (around frame 80) the blocks are blown outward and the same row spans
+ * ~23.4%, so it needs ~24.0% of the width to clear both ends. Renders of frame 80
+ * at 22.5 / 24.0 / 25.0 / 25.3 / 28.0%:
+ *
+ *   - 22.5% — the leading U is sliced and the trailing N of EXECUTION is gone;
+ *   - 24.0% — complete, with no margin at all;
+ *   - 25.0% and above — complete, with margin.
+ *
+ * So 25% is the floor everything below is pinned to. Measure any future change
+ * against the ignition frame, never the tower: the widest moment is the one that
+ * binds, and the tower shot will tell you a comfortable lie.
+ *
+ * What real phones ask for under `cover` is `vw / (vh * 16/9)`: 31.6% on a
+ * 375x667 SE, 26.0% on a 390x844 iPhone 14, 25.3% on a 412x915 Pixel 8 and on a
+ * 360x800 Galaxy S24. All of them clear 25% and stay full-bleed. What the crop
+ * removes is the tower's outermost bricks and the outer sparks.
+ *
+ * The desktop widths this rule newly covers are nowhere near the floor, which is
+ * why widening it costs nothing: the visible fraction is `aspect * 9/16`, so a
+ * square 900x900 window keeps 56.3% of the width and a 1200x800 keeps 84.4%.
+ * The floor only ever binds on the narrow phones above.
+ */
+@media (max-aspect-ratio: 16/9) {
+  #qx-rocket-film canvas {
+    object-fit: cover;
+  }
+}
+
+/**
+ * THE ULTRA-NARROW CAP IS GONE, AND IT IS THE ASSET THAT REMOVED IT.
+ *
+ * There used to be a `@media (max-aspect-ratio: 4/9)` rule here pinning the film
+ * to `width: 400%`. It existed because `cover` on a 16:9 SOURCE shows exactly
+ * `aspect * 9/16` of the width, which falls below 25% at aspect 4/9 and starts
+ * cropping the ends off the client's own copy — a folded 280x653 cover screen
+ * (0.429) was the one real device under that line.
+ *
+ * The portrait frame set is 9:16, not 16:9, so the arithmetic inverts: `cover`
+ * on it shows `aspect / (9/16)` of the width, which at 0.429 is 76%. The floor
+ * the rule protected cannot be reached any more, and keeping it would be
+ * actively wrong — `width: 400%` on a 608x1080 canvas is a four-fold zoom into a
+ * frame that already fits.
+ *
+ * Recover it from git if a 16:9 source ever comes back to a narrow screen.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  #qx-rocket-film {
+    display: none;
+  }
+}

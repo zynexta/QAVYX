@@ -1,0 +1,176 @@
+/* ---------------------------------------------------------------------------
+   The service panel on a SHORT viewport — a landscape phone, mostly.
+   ---------------------------------------------------------------------------
+   ## The failure this fixes, in numbers
+
+   At 844 x 390 (an iPhone lying down) `computeFrameGeometry` returns a design
+   frame 343px tall:
+
+       h = min(vh x 0.88, max(vh x 0.70, 620)) = min(343, 620) = 343
+
+   `FRAME_H_MIN` (620) is the tallest panel's own measured requirement and it can
+   never apply here, because `FRAME_H_MAX_FRACTION` caps the frame at 88% of the
+   screen and 88% of 390 is 343. The panel's two-column content needs ~536. So it
+   was ~190px too tall for its own box — and because `#qx-track-viewport` carries
+   `overflow: hidden` (load-bearing: it is what stops the four off-screen panels
+   spilling sideways), the overrun was not visible mess. It was SILENT
+   TRUNCATION: the tail of the chip list, the whole CTA and the `01 / 05`
+   indicator were clipped away, and the card looked deliberate.
+
+   That made it worse than a cosmetic bug. The CTA is the only route from the
+   carousel into a pillar page, and on a landscape phone it did not exist.
+
+   ## Why the fix is here and not in `motion/geometry.ts`
+
+   IT CANNOT BE THERE. A frame cannot be taller than its viewport, so even
+   `FRAME_H_MAX_FRACTION: 1.0` gives 390 against a 536 requirement. Raising that
+   constant is not a bad fix, it is an arithmetically impossible one — the note
+   beside it says so, and this file is the other half of that note. The frame is
+   as tall as it can be; what has to give is what goes inside it.
+
+   ## The one change that does almost all the work: ONE COLUMN
+
+   At 844 wide the panel was two columns (`md:grid-cols-[55fr_45fr]`, and 844 is
+   past `md`), which left the copy a 289px measure — narrower than the 375px
+   phone it was tuned for. Every string wrapped twice: the 48px title took two
+   lines, the description four, the chips three rows.
+
+   Going to one column gives the copy the panel's full 566px. The title fits on
+   one line, the description hits its own `max-w-[42ch]` cap instead of the
+   column, and the chips drop a row. Nothing shrinks and nothing is hidden — the
+   same content simply stops wrapping. That is most of the ~190px, and it is why
+   this file does not touch a single font size.
+
+   It also costs nothing real: the 45% it reclaims held the diagram, which is
+   `aria-hidden` decoration with no intrinsic size, and which `ServicePanel`
+   already drops below `md` on exactly the argument that it "costs nothing that
+   is not already in the prose".
+
+   ## The rest: A SHORT VIEWPORT TAKES THE COMPACT SCALE A NARROW ONE ALREADY HAS
+
+   One column got four of the five panels inside the frame. It did not get the
+   fifth: measured at 844 x 390, "Social & Content" wraps its five chips to THREE
+   rows where the others take two — 102px against 65 — and that 37px alone put it
+   17px into the indicator's reserved strip. Everything else about it is
+   identical to panels that fit.
+
+   Rather than tune a number until that one panel passes, the rules below adopt a
+   scale the panel ALREADY HAS. Below `md` a slide is 34px titles, 16px prose and
+   the tightened chip padding `ServicePanel` quarantines at `max-[359px]`; at 844
+   the panel is past `md`, so it was using 48px titles and 20px prose on a screen
+   390px tall — a title taking an eighth of the viewport's height for one word.
+   "Short" and "narrow" want the same compact treatment for the same reason, so
+   these rules say so instead of inventing a third register:
+
+       h2        48 -> 34   (`--qx-text-xl`, the sub-`md` size)
+       prose     20 -> 16   (`--qx-text-sm`, the sub-`md` size)
+       chips     the `max-[359px]` concession — no font change, only padding
+                 and leading, which is the whole reason that concession was
+                 written the way it was
+
+   The chips are where the 37px lives and they are the one thing here that is
+   NOT allowed to lose content: `ServicePanel` records that "the seventeen real
+   service areas live here — this list is why five panels can carry all of them
+   without seventeen steps of scroll". So the rule tightens their box and never
+   their count. Every string the client wrote is still on the card.
+
+   With all of it, the worst panel at 844 x 390 measures 257 against 328 — 71px
+   of slack, where one column alone left it 17px OVER. That margin is the point:
+   a media query cannot know how many lines a string wraps to on a real device's
+   fonts, and iOS metrics are not Chrome's.
+
+   And the rhythm: `gap-3` -> `gap-2` between the copy's five children, and the
+   panel's TOP padding from `py-5` to `--qx-space-2`. Both on the 1-7 token
+   scale.
+
+   THE BOTTOM PADDING DOES NOT MOVE, and that is the one number here that is a
+   contract rather than a preference: `py-5` is 2.5rem, exactly
+   `CarouselIndicator`'s `h-5`, and it is what reserves the indicator strip so
+   the list and CTA cannot run under it. Tightening it would re-create a
+   different version of the bug this file exists to fix. The top has no such job.
+
+   ## The breakpoint is 705px of HEIGHT, it is DERIVED, and it is NOT 620
+
+   `FRAME_H_MIN / FRAME_H_MAX_FRACTION` = 620 / 0.88 = 704.5. Above that height
+   the frame has reached its 620px cap and STOPS GROWING WITH THE VIEWPORT; below
+   it the frame is only whatever 88% of the screen allows, which is less than the
+   620 the panel was measured against. So 705 is precisely the height at which
+   the frame stops being viewport-constrained, and therefore precisely the set of
+   viewports whose panel can be over budget.
+
+   IT WAS 620 FIRST, AND 620 WAS WRONG BY SIXTY PIXELS OF CLIPPED CTA. Swept
+   across widths 768-1440 x heights 600-800, the panel overflows its frame at
+   EVERY width from 768 to 1024 at heights 640, 660 and 680 — by as much as 50px
+   at 768x640, CTA clipped. A 620 threshold left all of that uncovered while
+   looking like it had fixed the problem, because the landscape phone it was
+   chosen for passed. The band is not "landscape phones"; it is "any viewport too
+   short for the frame to reach 620", and only the derived number describes it.
+
+   That sweep is also what says these rules are ENOUGH rather than merely better:
+   with them, the worst panel at any swept size sits at least 232px inside its
+   frame, against +50 before.
+
+   ONE TIGHTNESS IS LEFT AND IT IS NOT THIS FILE'S. At exactly 768 wide — the
+   narrowest two-column layout there is, where the copy column is 254px — the
+   worst panel clears its frame by 7px at any height above the bound. It does not
+   clip, it predates all of this, and closing it means widening `FRAME_FRACTIONS`'
+   0.84 row rather than anything here.
+
+   It is a HEIGHT query, the only one in this project, so it is here rather than
+   as a Tailwind variant: `tailwind.config.ts`'s `screens` table is documented as
+   width-only and layout-only, and adding one `raw` height entry to it would make
+   that comment false for every future reader of the other four.
+
+   ## Scoped to `#qx-track`, i.e. the SLIDE and never the stacked card
+
+   The stacked card lives in normal document flow, where the page grows to fit
+   its content and there is no frame to overflow. Applying any of this to it
+   would be solving a problem it does not have, and would put a second, invisible
+   layout on the reduced-motion path. `#qx-track` is the carousel's own strip, so
+   the scope is structural rather than a class convention someone can forget.
+
+   UNLAYERED and imported after `globals.css`, like `frame.css` and `marquee.css`
+   and for the same reason: these rules override Tailwind utilities of identical
+   specificity, so source order is the only thing that decides.                */
+
+@media (max-height: 705px) {
+  #qx-track .qx-panel {
+    grid-template-columns: 1fr;
+    padding-top: var(--qx-space-2);
+  }
+
+  /* The diagram. `display: none` rather than `visibility`, so it leaves the grid
+     entirely — a hidden-but-present child would still hold its track open and
+     the copy would keep the 289px measure this whole file exists to widen. */
+  #qx-track .qx-panel-visual {
+    display: none;
+  }
+
+  #qx-track .qx-panel-copy {
+    gap: var(--qx-space-2);
+  }
+
+  /* The compact type scale — the same two sizes the panel uses below `md`.
+     Selected structurally rather than by a class hook: the copy column's
+     children are always [counter, title, prose, chips, cta], so "the <p> that is
+     not the first child" is the description and cannot become anything else
+     without the column being rebuilt. The counter keeps `--qx-text-2xs`, which
+     is already the smallest step on the scale. */
+  #qx-track .qx-panel h2 {
+    font-size: var(--qx-text-xl);
+  }
+
+  #qx-track .qx-panel-copy > p:not(:first-child) {
+    font-size: var(--qx-text-sm);
+  }
+
+  /* The chips: `ServicePanel`'s `max-[359px]` concession, applied on the other
+     axis. Padding and leading only — never the font size, never the count.
+     These seventeen strings are the client's real service areas and they are
+     the reason five panels can carry all of them. */
+  #qx-track .qx-panel-copy li {
+    padding-block: 0;
+    padding-inline: var(--qx-space-1);
+    line-height: 1.25;
+  }
+}

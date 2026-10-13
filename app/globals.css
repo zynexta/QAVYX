@@ -1,0 +1,592 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: var(--qx-black);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  body {
+    margin: 0;
+    /* svh, never vh: the mobile URL bar moving must not resize the pinned
+       hero. See BUILD-PLAN Phase 10. */
+    min-height: 100svh;
+    background-color: var(--qx-black);
+    color: var(--qx-white);
+    font-family: var(--qx-font-body), system-ui, sans-serif;
+    font-size: var(--qx-text-sm);
+    line-height: var(--qx-leading-body);
+    overscroll-behavior-y: none;
+    overflow-x: clip;
+  }
+
+  /* THE STICKY HEADER IS NOW IN THE WAY OF EVERY FRAGMENT LANDING, and this is
+     the one line that answers it for all of them.
+
+     `components/nav/SiteHeader.tsx` sticks to the top at every width. Without
+     this, an anchored arrival — the twenty-four carousel chips, every
+     `#section` a visitor pastes — puts the section's top edge at the viewport's
+     top edge, which is underneath the bar. `scroll-padding-top` on the scroll
+     container is what both `scrollIntoView` and the browser's own fragment jump
+     read, so `lib/anchor-scroll.ts` needs no arithmetic and neither does any
+     future anchor.
+
+     It stacks with `PillarPage`'s own `scroll-mt-6`, and that is intended: the
+     bar's height clears the obstruction and the 4rem beyond it is the same step
+     the page opens with, which is what makes an anchored landing look like the
+     top of a document rather than like a scroll that stopped early. */
+  html {
+    scroll-padding-top: calc(var(--qx-nav-h) + var(--qx-stroke));
+  }
+
+  h1,
+  h2,
+  h3,
+  /* `.qx-display` is display type that is NOT a heading, and it exists because
+     `font-display` maps the FAMILY ONLY — `tailwind.config.ts` declares no
+     `lineHeight`, `letterSpacing` or `fontWeight` anywhere in `theme.extend`.
+     Every other display string on this site is an h1/h2/h3 and picks the other
+     three declarations up here; `HeroStatic`'s positioning line is deliberately
+     a <p> (a title card has no section under it) and so was picking up the BODY
+     leading of 1.55, tracking `normal` and weight 400 — 72px type set 111.6px
+     apart, beside a 48px pillar title set 55.2px apart two lines below it.
+     `TrustStrip` hit the same trap and patched a third of it by hand
+     (`tracking-[-0.02em]`, still at body leading and weight 400).
+
+     IN `@layer base`, so any `leading-*` / `tracking-*` / `font-*` utility still
+     wins — the OPPOSITE of the layering choice this file makes for
+     `#qx-hero-static` and `.qx-open-frame`, which are unlayered precisely
+     because they must BEAT utilities. This one is a default, not an override. */
+  .qx-display {
+    font-family: var(--qx-font-display), system-ui, sans-serif;
+    line-height: var(--qx-leading-display);
+    letter-spacing: var(--qx-tracking-display);
+    font-weight: 500;
+  }
+
+  code,
+  kbd,
+  samp {
+    font-family: var(--qx-font-mono), ui-monospace, monospace;
+    letter-spacing: var(--qx-tracking-mono);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--qx-green);
+    outline-offset: 2px;
+  }
+
+  /* Touch tuning for everything interactive.
+     `manipulation` drops the ~300ms double-tap-to-zoom wait, which is the
+     difference between a nav that feels instant and one that feels laggy — and
+     it does NOT disable pinch zoom, which must keep working.
+     The tap highlight is SET, not removed: these targets have `hover:` states
+     that a touch device never shows, so with the highlight off there would be no
+     press feedback at all. A brand-green wash is the feedback. */
+  a,
+  button,
+  summary,
+  [role='button'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: color-mix(in srgb, var(--qx-green) 18%, transparent);
+  }
+
+  /* During the intro the mouse GLYPH is the cursor, so hide the OS pointer — the
+     two must not show at once (BUILD-PLAN: the cursor COMPLETES the mark). The
+     beats are the Engine-1 states, read off the attribute useHeroTimeline already
+     writes to #qx-hero-root; from `ready` onward the glyph has landed in the Q and
+     the page is interactive, so the real pointer returns. A returning visitor /
+     reduced-motion boots straight to `ready`, so it never hides for them. */
+  #qx-hero-root[data-beat='boot'],
+  #qx-hero-root[data-beat='dot-in'],
+  #qx-hero-root[data-beat='pointer-wake'],
+  #qx-hero-root[data-beat='cursor-morph'],
+  #qx-hero-root[data-beat='click'],
+  #qx-hero-root[data-beat='logo-build'] {
+    cursor: none;
+  }
+
+  /* The floor: nothing animates for these users, including anything added by
+     accident later. The reduced-motion PATH — no pin, no motion layer, the hero
+     as a document — is `HeroStatic` plus the rule below; this block stays
+     because it catches the CSS transitions that path still renders
+     (`.qx-index-row`, `.qx-whatsapp`), which no amount of JS branching would.
+
+     It is also the floor under the two things Phase 13 added. The SCROLL REVEAL
+     (`styles/motion.css`) never runs for these visitors at all — the inline
+     script in `app/layout.tsx` declines to set `data-qx-motion` and every rule
+     in that file is nested under it, so the content is simply present. The
+     ACCORDION is not gated that way and is caught here instead: `<details>` has
+     to keep opening and closing for everyone, so the transition is collapsed
+     rather than the behaviour removed.                                        */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The static hero, and which visitors keep it. (Phase 9)
+   ---------------------------------------------------------------------------
+   `HeroStatic` is server-rendered on EVERY response — it is the hero as a
+   document, and the motion layer is an enhancement over it. So the question is
+   never "should we render it" but "who has it taken away", and the answer is:
+   only a visitor who is actually going to get the animation instead.
+
+   THIS RULE IS THE WHOLE REASON THE PHASE'S TWO HEADLINE CRITERIA ARE
+   COMPATIBLE. "The JS-disabled DOM is identical to the reduced-motion DOM"
+   forces the static hero into the served HTML unconditionally. "No visitor sees
+   a flash of the static version" forces the decision to hide it to be taken
+   BEFORE first paint — which rules out `useState` + effect, rules out
+   `useSyncExternalStore`, and rules out anything else JS can do, because all of
+   them run after the server's HTML has already painted. CSS is evaluated on the
+   first paint, so it is the only mechanism that can answer both.
+
+   "NO VISITOR SEES A FLASH OF THE STATIC VERSION" IS STILL THE CRITERION, and
+   the three phases below are what now hold it. A CSS-only answer could hide the
+   fallback before first paint but could not tell a 1.2s wait from a 6.3s one, so
+   it had to choose between a flash on fast connections and a black screen on
+   slow ones — and both of those shipped and were reported. The phases put the
+   decision on a 2s timer instead, which is the only thing that separates the two
+   cases; the fallback is hidden before first paint exactly as this paragraph
+   requires, and only ever revealed on a wait long enough that showing it is the
+   lesser fault.
+
+   A visitor with no motion preference and no JavaScript used to be the case this
+   rule got wrong on its own, patched by a `<noscript>` override in
+   `app/page.tsx`. That override is gone: the fallback is visible by DEFAULT now
+   and hidden only by selectors keyed on an attribute a script writes, so with
+   scripting off none of them match and the static hero simply stands.
+
+   THERE IS NO SIZE CLAUSE HERE, AND PHASE 10 IS WHY THERE IS NOT. That phase
+   added `and (min-width: 768px) and (min-height: 620px)` — BUILD-PLAN's "below
+   768 px no pin is created" — and it was reverted on the client's direction: a
+   phone gets the same scrolling experience as a desktop. The motion preference
+   is the only thing that decides who keeps this element, exactly as in Phase 9.
+   The reasoning, and where a size branch would have to go if it is ever wanted
+   again, is in `components/hero/HeroMount.tsx`.
+
+   UNLAYERED, like `.qx-open-frame` below and for the same reason — Tailwind's
+   `utilities` layer outranks `base` however specific a `base` selector is. The
+   ID selector would win on specificity anyway; this keeps the file's one rule
+   about layering true everywhere rather than true-except-here.               */
+@media (prefers-reduced-motion: no-preference) {
+  /* ---------------------------------------------------------------------------
+     THREE PHASES, NOT TWO, AND THE MIDDLE ONE IS THE WHOLE POINT.
+     ---------------------------------------------------------------------------
+     The motion hero is an `ssr: false` chunk, so there is always a window where
+     neither hero exists. What goes in that window is a trade with a different
+     right answer at each end of the connection range, and picking one answer for
+     both is how this got reported twice:
+
+       - Hidden fallback (the original): the top of the page was BLACK until the
+         chunk landed. Fine at 1.2s on wifi, and the client's report on a phone at
+         6.3s was that the rocket section "just blank... but some time ok".
+       - Fallback shown immediately (the first fix): the black screen went, and on
+         a fast reload the static hero now painted and was replaced ~1.2s later.
+         The client's report: "when i refresh the page this show it is bad."
+
+     Both reports are right. A fallback is worth showing when the wait is long
+     enough to look broken and not worth showing when it is short enough to look
+     like loading, which is the standard delayed-skeleton rule and is what the
+     three phases below encode:
+
+       1. `data-qx-hero-boot` set, no `-slow` yet — JS is running and the wait is
+          still short. Neither hero; the reservation holds the screen open so the
+          page does not begin at §5 The Problem.
+       2. `data-qx-hero-slow` added at 2s — long enough that black reads as
+          broken. The fallback appears and the reservation stands down, because
+          the fallback is now the thing holding the space.
+       3. `data-qx-hero='live'` — the real hero painted. Fallback out.
+
+     2s is chosen against measurements rather than taste: on production at
+     390x844 the motion layer first paints at 1.2s on fast wifi, 3.1s at 4x CPU /
+     1.6 Mbps and 6.3s at 6x CPU / 0.7 Mbps. 2s clears the fast case with margin
+     so a healthy reload never flashes the fallback at all, and still leaves the
+     slow phone showing a hero for most of its wait. The number lives in
+     `lib/home-boot.ts` with the same note.
+
+     THE FALLBACK IS VISIBLE BY DEFAULT AND HIDDEN BY EXCEPTION, which is what
+     keeps the no-JS path correct with no `<noscript>` override: `-boot` is
+     written by a script, so with scripting off none of the hiding selectors can
+     match and the static hero simply stands, as it must. Written the other way
+     round — hidden by default, shown by an attribute — a visitor without
+     JavaScript would get no hero at all, which is the bug the old `<noscript>`
+     block in `app/page.tsx` existed to patch. Under `reduce` this whole query is
+     inert and the fallback is likewise simply visible.
+
+     `HeroExperience` sets `-live` in a layout effect on first paint and clears it
+     on unmount, so a failed or blocked chunk ends with the fallback standing
+     rather than with a blank screen.                                            */
+
+  /* Phase 1 and phase 3: nothing to show, or the real thing is up. */
+  html[data-qx-hero-boot]:not([data-qx-hero-slow]) #qx-hero-static,
+  html[data-qx-hero='live'] #qx-hero-static {
+    display: none;
+  }
+
+  /* The reservation belongs to PHASE 1 ALONE, and that is the correction to the
+     round before this one.
+
+     It used to sit unconditionally beside `#qx-hero-static { display: none }`,
+     which made it the other half of one decision — and it could only ever hold
+     open a screen of NOTHING, so it fixed the page starting at §5 by spending a
+     blank screen on it. Scoped to the phase where nothing is shown, it does the
+     job it was written for and stops before the phase where the fallback is
+     already holding the space. Both would double the height.
+
+     `100svh` and not `100vh`, for the reason the whole project uses `svh`: the
+     mobile URL bar collapsing must not resize this. It is the same height
+     `#qx-hero` itself carries (`h-svh`), which is what makes the swap seamless —
+     the reservation is not an approximation of the hero, it is its measurement. */
+  /* When restoring scroll directly to #the-problem on reload, reserve the exact
+     pin-spacer height (100svh hero element + 1015vh scroll pin budget = calc(100svh + 1015vh))
+     immediately on frame 1 before GSAP hydrates so #the-problem is in its exact
+     final document coordinates with zero layout shift or rocket flash. */
+  html[data-qx-restore-problem] #qx-hero-reserve {
+    height: calc(100svh + 1015vh) !important;
+    min-height: calc(100svh + 1015vh) !important;
+  }
+  html[data-qx-restore-problem] #qx-hero-static {
+    display: none !important;
+  }
+  html[data-qx-restore-problem] #qx-rocket-film {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  html[data-qx-restore-problem] .qx-header--deferred {
+    position: fixed !important;
+    inset-inline: 0 !important;
+    top: 0 !important;
+    transform: translate3d(0, 0, 0) !important;
+    visibility: visible !important;
+    transition: none !important;
+  }
+
+  html[data-qx-hero-boot]:not([data-qx-hero-slow]):not([data-qx-hero='live'])
+    #qx-hero-reserve {
+    min-height: 100svh;
+  }
+
+  /* The fallback ARRIVES rather than appearing, and only ever on the slow path —
+     phase 1 skips straight to phase 3 with this never running. 180ms is short
+     enough not to delay a visitor who has already waited two seconds, and long
+     enough that the swap does not read as a glitch. */
+  html[data-qx-hero-slow]:not([data-qx-hero='live']) #qx-hero-static {
+    animation: qx-hero-static-in 180ms var(--qx-ease-out) both;
+  }
+
+  @keyframes qx-hero-static-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The Q, worn by a DOM container — MOVED.
+   ---------------------------------------------------------------------------
+   `.qx-open-frame` lived here while it was one class used in one place. Every
+   section and every card on the site now wears the mark, so it is a system with
+   two scales and a draw-on-reveal, and it lives in `styles/frame.css` with the
+   note explaining why that does not make it wallpaper. `.qx-open-frame` is still
+   a valid class name and still resolves to byte-identical computed style — see
+   the note there about `phase8c-shell.spec.ts`.
+
+   Import order in `app/layout.tsx` keeps the guarantee this block used to make
+   for itself: `frame.css` and `motion.css` come after this file, so their
+   unlayered rules sit after Tailwind's `utilities` layer rather than losing to
+   it.                                                                         */
+
+/* ---------------------------------------------------------------------------
+   The page you are on, in the footer's navigation.
+   ---------------------------------------------------------------------------
+   `aria-current="page"`, written by `lib/route-mark.ts` — the same attribute and
+   the same match that lights the header menu's panel, drawn differently because
+   the two lists are different objects. The menu is eleven labels at display size
+   and takes an indent and a rule in the margin (`styles/menu.css`); this is
+   twelve 12px greys in a two-column grid, where an indent would put one row out
+   of true with the column it sits in.
+
+   SO THE FOOTER'S MARK COSTS NO LAYOUT AT ALL: a colour the list does not
+   otherwise use, and an underline. Grey is the resting state and WHITE is the
+   hover, so green is a third state rather than a louder version of either — the
+   ambiguity worth avoiding is a current row that reads as merely hovered, and a
+   pointer that never touches this list on a phone has no second state to compare
+   against. The underline is the half that survives being unable to see colour,
+   and `text-decoration` is the one way to draw a line under text that changes no
+   box: a border or a pseudo-element would move the grid rows around it.
+
+   Hover keeps its own colour here. It is `--qx-white` against the mark's green,
+   so pointing at the row you are on still acknowledges the pointer, and the
+   underline is what says you are already there.                                */
+
+#qx-footer [data-qx-nav-mark] a[aria-current='page'] {
+  color: var(--qx-green);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+
+/* AND THE HOVER HAS TO BE WRITTEN OUT, because this block outranks it. The
+   colour above comes from an id selector and Tailwind's `hover:text-qx-white` is
+   one class — so without these two lines the row you are on would be the one row
+   in the footer that does not answer the pointer, which reads as a dead link
+   rather than as the current page. The underline stays, and is what still says
+   it. */
+#qx-footer [data-qx-nav-mark] a[aria-current='page']:hover,
+#qx-footer [data-qx-nav-mark] a[aria-current='page']:focus-visible {
+  color: var(--qx-white);
+}
+
+/* The index rows. The label shifts and a green rule draws under it — the one
+   category the governing motion rule has for this, which is *navigation*. Both
+   properties are compositor-friendly, and the global reduced-motion block above
+   removes the transition entirely rather than shortening it. */
+.qx-index-row {
+  transition: color 180ms ease;
+}
+
+.qx-index-row .qx-index-rule {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+
+.qx-index-row:hover .qx-index-rule,
+.qx-index-row:focus-visible .qx-index-rule {
+  transform: scaleX(1);
+}
+
+/* The arrow that travels with it.
+   ---------------------------------------------------------------------------
+   `.qx-index-rule` says "this way out" with a line and no subject. A row was
+   otherwise a label and a hairline: at rest there was nothing on it saying it
+   was a destination rather than a heading, which on the site index — this site's
+   PRIMARY navigation, there being no navbar — is the one thing every row needed
+   to say.
+
+   IT IS VISIBLE AT REST, and that is the decision rather than the styling. An
+   affordance that only appears on hover does not exist on a phone, where most of
+   this site is read, and the arrow is doing its job precisely for the reader who
+   has not pointed at anything yet. Hover only moves it and brightens it.
+
+   The movement is NAVIGATION — one of the five the governing motion rule allows
+   — and it runs in the same 180ms and the same direction as the rule beside it,
+   toward the corner the mark leaves open. Two properties, both composited. The
+   global reduced-motion block collapses it. */
+.qx-index-row .qx-index-arrow {
+  color: var(--qx-grey);
+  transition:
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.qx-index-row:hover .qx-index-arrow,
+.qx-index-row:focus-visible .qx-index-arrow {
+  color: var(--qx-green);
+  transform: translate3d(0.35rem, 0, 0);
+}
+
+/* ---------------------------------------------------------------------------
+   The stacked pillar CTA's hit area — the tap target, not the spacing.
+   ---------------------------------------------------------------------------
+   Twelve-pixel mono over a 1px rule comes to 23.6 x 74px: the smallest target on
+   the site, and the ONLY target at all in ~3000px of the reduced-motion and
+   no-JS hero (the service chips are bare <li> with no href, handler or role, and
+   the mark is a bare <svg>). It clears SC 2.5.8 on the spacing exception exactly
+   because nothing near it is a target — so this is not a compliance failure. It
+   is a miss against this project's OWN 44px bar, which it has been sent back to
+   meet twice: the since-removed `LaunchpadNote` ("`py-2` is the tap target, not
+   the spacing") and `Footer` ("a 20px-tall tap target in the one part of the page
+   a thumb reaches last"). This is the path whose audience skews hardest to touch,
+   tremor and low vision, and it had the smallest target of the three.
+
+   THE FIRST PRECEDENT NO LONGER HAS A FILE. `LaunchpadNote` was deleted on the
+   client's direction; the quote is kept as project history because it is what the
+   bar was set against, and because dropping it would make the two counts below
+   ("of the three", "for the third time") wrong in a rule that is otherwise
+   unaffected. History, not a live cross-reference — do not go looking for it.
+
+   THE INK CANNOT MOVE. `border-b` IS the affordance, so padding the box would
+   float the rule off the word it underlines. The hit area grows; the drawing
+   does not.
+
+   Scoped to the stacked hook. `.qx-panel-cta` has the same box, but it lives
+   inside a `pointer-events: none` viewport in a pinned carousel, and reaching it
+   is Phase 11's problem rather than a padding value. `:focus-visible`'s outline
+   follows the border box, so the focus ring stays on the ink.                  */
+/* ---------------------------------------------------------------------------
+   The carousel pagination's tap target — the same problem as the CTA above,
+   one step harder.
+   ---------------------------------------------------------------------------
+   Each segment's ink is 2px tall. The button IS the ink, because the strip is
+   `h-5` and that height is a contract with `ServicePanel`'s `pb-5` — the panel
+   reserves exactly 2.5rem so the two can never overlap, and padding the buttons
+   would grow the strip straight through it. So the target is an absolutely
+   positioned ::after, exactly as `.qx-service-cta` does it, and for the identical
+   stated reason: THE INK CANNOT MOVE.
+
+   VERTICAL IS FREE AND TAKES THE FULL 44. `-21px` either side of a 2px box is
+   44px tall. It overflows the strip upward into the panel's own bottom padding,
+   which is `pointer-events: none` there, and downward to the strip's edge — so
+   it lands inside `#qx-track-viewport` and is not clipped by its `overflow:
+   hidden`.
+
+   HORIZONTAL TILES THE GAP AND CANNOT TAKE 44. Six segments sit in a strip that
+   also holds the `01 / 06` read head, inside a frame that is ~262px wide at a
+   320px viewport. Six 44px targets need 264px on their own. The honest maximum
+   is therefore half the gap on each side, which makes the targets ADJACENT —
+   every pixel between the first segment and the last belongs to one of them, and
+   none of them overlap, so a near-miss selects a neighbour instead of nothing.
+
+   That is measured, not assumed: `--qx-space-1` is the `gap-1` between segments,
+   so `-1 * (space-1 / 2)` per side adds exactly one gap to each target's width.
+
+   WHAT THIS BUYS, STATED HONESTLY. The result clears WCAG 2.5.8's 24x24 minimum
+   from `md` up and is under it on the narrowest phones, where the strip has no
+   width left to give. It does not reach this project's own 44px bar horizontally
+   and cannot without dropping the read head — see the note on `.qx-service-cta`
+   for where that bar comes from. Flagged rather than quietly rounded up.        */
+.qx-indicator-seg::after {
+  content: '';
+  position: absolute;
+  inset-block: -21px;
+  inset-inline: calc(var(--qx-space-1) / -2);
+}
+
+/* The focus ring cannot sit on a 2px box and be seen. `outline-offset` pushes it
+   off the ink to roughly the tap target's own height, so a keyboard user gets a
+   ring around the CONTROL rather than a hairline underscoring the drawing. The
+   ink still does not move. */
+.qx-indicator-seg:focus-visible {
+  outline: 2px solid var(--qx-green);
+  outline-offset: 6px;
+}
+
+.qx-service-cta {
+  position: relative;
+}
+
+.qx-service-cta::after {
+  content: '';
+  position: absolute;
+  /* 23.6 + 2 x 16 = 55.6px tall, 74 + 32 = 106px wide. `--qx-space-3` because
+     the scale has no 12px step, and -0.5rem would land at 39.6 — short of 44 for
+     the third time. */
+  inset: calc(var(--qx-space-3) * -1);
+}
+
+/* THE BRUTALIST INDEX STRIP IS GONE, with the tiles it styled.
+
+   `.qx-brut-nav` was ~70 lines: a lattice drawn as edges rather than borders (so
+   interior lines never doubled and a spanning cell never misaligned a seam),
+   asymmetric inline padding to cancel `tracking-[0.28em]`'s invisible tail, and
+   an instant `--qx-green` flood on hover against this file's own 180ms
+   convention. It dressed the five company-page tiles at the foot of the
+   homepage's site index — Who We Are, Our Projects, Our Services, FAQ, Contact
+   Us — which the client removed; the header's menu and the footer carry those
+   routes now.
+
+   Deleted rather than left in place. A stylesheet block matching no element is
+   the CSS version of a test asserting against a function nothing calls: it reads
+   as coverage and is worse than nothing, because the next person to touch the
+   index will style against rules that were never applying. Recover the whole
+   thing, and the argument for every value in it, with:
+
+       git show HEAD:app/globals.css                                            */
+
+/* The floating WhatsApp button's one-shot wake — the draft's "slight
+   bounce/pulse animation on first page load to draw attention, then settles to
+   static". THREE ITERATIONS, NOT `infinite`: the project allows exactly one idle
+   loop (the breathing dot) and this is not it. The delay keeps it out of the
+   first moment of the intro. The reduced-motion block above removes it. */
+@keyframes qx-whatsapp-wake {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.qx-whatsapp {
+  animation: qx-whatsapp-wake 1.1s ease-in-out 1.2s 3;
+}
+
+/* ---------------------------------------------------------------------------
+   The severed rule — §5 The Problem.
+   ---------------------------------------------------------------------------
+   A hairline that runs the width of its column and then simply stops, short of
+   the end. It is the brand mark at hairline scale: the Q's bottom edge does
+   exactly this, running out and leaving the corner open, and this is that edge
+   on its own.
+
+   It is also the deliberate inverse of `.qx-index-rule`. There, a green rule
+   DRAWS THROUGH on hover to say "this way out" — a connection completing. Here
+   four rules never connect, above four headings about a business whose tools and
+   teams "were never built to talk to each other". Same device, opposite
+   argument.
+
+   A BREAK WITH A STUB AFTER IT, not a rule that simply stops short. The first
+   version truncated at 78% and it read as unresolved rather than deliberate —
+   on a narrow screen the prose beneath ran on past where the line gave up, so it
+   looked like a border that had been sized wrong. A rule that spans the full
+   column and is interrupted near its end cannot be read that way: nothing looks
+   accidentally gappy. It is also the truer argument. A truncation says
+   "unfinished"; a gap says two things that do not meet, which is what §5 is
+   about — "freelancers, tools, and platforms that were never built to talk to
+   each other".
+
+   A gradient rather than two elements, so the rule keeps the full column width
+   as its box and stays flush with the text under it at every breakpoint. A
+   percentage-width element would re-measure against a different parent in the
+   one-column layout and break somewhere else.
+
+   Decorative, never load-bearing: every failure mode is a real <h3> with real
+   prose. `--qx-line` is a surface token and must never be the sole indicator of
+   anything (see tokens.css), which is exactly the discipline this obeys.        */
+.qx-severed-rule {
+  display: block;
+  height: var(--qx-stroke);
+  background-image: linear-gradient(
+    to right,
+    var(--qx-line) 0 72%,
+    transparent 72% 80%,
+    var(--qx-line) 80% 100%
+  );
+}
+
+/* Ensure GSAP ScrollTrigger's 1015vh pin spacer wrapper does not swallow touch or click events */
+.pin-spacer {
+  pointer-events: none !important;
+}
+.pin-spacer > * {
+  pointer-events: auto;
+}
+#qx-hero {
+  pointer-events: none !important;
+}
+#qx-hero-reserve {
+  pointer-events: none;
+}
+#qx-hero-reserve > * {
+  pointer-events: auto;
+}
+

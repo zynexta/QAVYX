@@ -1,0 +1,219 @@
+/* ---------------------------------------------------------------------------
+   The trust strip's moving band — §4.
+   ---------------------------------------------------------------------------
+   ## This is the project's SECOND idle loop, and the first was the rule
+
+   `app/globals.css` says it plainly, on the WhatsApp button's three-iteration
+   wake: "the project allows exactly one idle loop (the breathing dot) and this
+   is not it." This is the exception, made deliberately and on request, because
+   §4 is the one section whose content is a SET — six sectors, no order, no
+   hierarchy — and a set that does not fit on one line has to either wrap into a
+   block (which is what `WhoWeServe` already does two screens below, with §10's
+   seven) or move. Two identical chip grids on one page is the redundancy; a band
+   is the thing that is not the grid.
+
+   Three things keep it from becoming the distraction the guideline warns about,
+   and all three are load-bearing:
+
+     1. It is `transform` only, on a composited layer, at ~45px/s. Slow enough to
+        read a passing label, far below the speed that pulls the eye off the copy
+        beside it.
+     2. IT STOPS WHEN POINTED AT. `animation-play-state: paused` on hover and on
+        focus-within, so anyone who wants to actually read the list can, and so
+        the hover state below is reachable rather than a moving target.
+     3. It does not exist at all under `prefers-reduced-motion` — not "slowed",
+        not "shortened": the band becomes a centred, wrapped, static list. See
+        the block at the bottom, which has to do more work than it looks.
+
+   ## The seamless loop, and the half-gap bug it is built to avoid
+
+   The track holds the six sectors TWICE and translates -50%, so the moment the
+   first copy has fully left, the second is sitting exactly where the first
+   started and the reset is invisible.
+
+   That arithmetic only works if the two halves are byte-identical in width,
+   which is why the spacing between items is `margin-inline-end` ON THE ITEM and
+   NOT `gap` on the track. With `gap`, a track of 12 items is 12 items + 11 gaps,
+   half of it is 6 items + 5.5 gaps, and the loop jumps by half a gap every time
+   it wraps — the classic marquee stutter, and it is invisible in a screenshot,
+   so it ships. With a trailing margin every item is self-contained and half the
+   track is exactly six of them.
+
+   ## The mask, not a pair of gradient overlays
+
+   Two absolutely-positioned black-to-transparent divs would do the same job and
+   would also sit on top of the band, which means they would have to be
+   `pointer-events: none` and would still be two more elements in the DOM for a
+   visual effect. `mask-image` fades the band itself, so the items dissolve at
+   the edges instead of sliding under something. The `-webkit-` line is for
+   Safari < 15.4, where the unprefixed property does nothing.                   */
+
+.qx-marquee {
+  position: relative;
+  overflow: hidden;
+  /* The band's own edges. Full-bleed, so they read as the page's structure
+     rather than as the section's border — the only two horizontal rules
+     between the hero and §5's frame. */
+  border-block: var(--qx-stroke) solid var(--qx-line);
+  padding-block: var(--qx-space-4);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--qx-marquee-fade),
+    #000 calc(100% - var(--qx-marquee-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--qx-marquee-fade),
+    #000 calc(100% - var(--qx-marquee-fade)),
+    transparent 100%
+  );
+}
+
+.qx-marquee__track {
+  display: flex;
+  align-items: center;
+  /* `max-content`, or the flex line shrinks to the container and the items wrap
+     — at which point there is nothing to translate. */
+  inline-size: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: qx-marquee-run var(--qx-marquee-dur) linear infinite;
+  will-change: transform;
+}
+
+/* Nothing moves until the band has been seen once. The reveal layer sets
+   `data-revealed` the first time it enters the viewport and never takes it back,
+   so this is a start signal and not a scroll effect: no loop runs 1015vh above
+   the fold, and the first frame a reader sees is the first frame of the loop
+   rather than wherever it had wandered to.
+
+   SCOPED TO `data-qx-motion`, and that prefix is the whole rule. Unscoped, this
+   waits for an attribute that a JS-disabled visitor never gets — so the band
+   would freeze at frame zero with BOTH copies of the six sitting there, which
+   reads as the list having been rendered twice by mistake. The attribute means
+   "this visitor has the reveal layer", so the pause only ever waits for
+   something that is actually coming. Same doctrine as `styles/motion.css`. */
+html[data-qx-motion='on'] [data-reveal]:not([data-revealed]) .qx-marquee__track {
+  animation-play-state: paused;
+}
+
+.qx-marquee:hover .qx-marquee__track,
+.qx-marquee:focus-within .qx-marquee__track {
+  animation-play-state: paused;
+}
+
+@keyframes qx-marquee-run {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.qx-marquee__item {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--qx-space-3);
+  margin-inline-end: var(--qx-space-6);
+  color: var(--qx-grey);
+  transition: color 200ms var(--qx-ease-out);
+}
+
+/* The glyph's box — the same hairline square the rest of the site is made of,
+   at the scale a 1rem glyph needs. `--qx-ink` and not transparent: the band is
+   masked at its edges, and a filled box keeps its shape legible while it is
+   fading out where an outline alone would break up. */
+.qx-marquee__badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--qx-space-5);
+  block-size: var(--qx-space-5);
+  border: var(--qx-stroke) solid var(--qx-line);
+  border-radius: var(--qx-radius-sm);
+  background-color: var(--qx-ink);
+  transition: border-color 200ms var(--qx-ease-out);
+}
+
+.qx-marquee__label {
+  font-family: var(--qx-font-mono), ui-monospace, monospace;
+  font-size: var(--qx-text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Below `sm`, the band is ~390px wide and one item at desktop metrics fills all
+   of it — a marquee showing a single token at a time reads as a broken carousel
+   rather than as a set. Tightening the label and halving the trailing margin
+   puts two and a bit on screen, which is the minimum that says "this is a list
+   and it is moving". The badge does NOT shrink with them: it is the part that is
+   recognised at a glance, and 2.5rem is already the smallest it reads at. */
+@media (max-width: 639px) {
+  .qx-marquee__item {
+    gap: var(--qx-space-2);
+    margin-inline-end: var(--qx-space-5);
+  }
+
+  .qx-marquee__label {
+    font-size: var(--qx-text-2xs);
+    letter-spacing: 0.12em;
+  }
+}
+
+/* The one interaction: the band stops and the item under the pointer comes
+   forward. Grey → white on the type, hairline → dim green on the box, which is
+   the same two-step every link and card on this site already uses. */
+.qx-marquee__item:hover {
+  color: var(--qx-white);
+}
+
+.qx-marquee__item:hover .qx-marquee__badge {
+  border-color: var(--qx-green-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion — and why `animation: none` is not enough on its own.
+   ---------------------------------------------------------------------------
+   The global block in `app/globals.css` sets `animation-duration: 0.01ms
+   !important` on every element. Applied to a marquee that alone is WORSE than
+   the animation: the track completes its run instantly and parks at
+   `translate3d(-50%, 0, 0)`, so the band renders permanently scrolled to its
+   halfway point with the first three sectors sitting off-screen to the left.
+   Killing the animation by name is what puts the track back at 0.
+
+   Everything else here is the band becoming a block: the track wraps and
+   centres, the second copy is removed so nothing is listed twice, and the mask
+   goes with it — an edge fade on a wrapped, centred list reads as a rendering
+   fault, because nothing is going anywhere for it to fade into.               */
+@media (prefers-reduced-motion: reduce) {
+  .qx-marquee {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .qx-marquee__track {
+    animation: none !important;
+    transform: none !important;
+    inline-size: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--qx-space-4) 0;
+  }
+
+  .qx-marquee__item[data-clone='true'] {
+    display: none;
+  }
+
+  /* The trailing margin was the loop's arithmetic; wrapped, it is just spacing,
+     and it must not hang off the last item on a line. */
+  .qx-marquee__item {
+    margin-inline: var(--qx-space-3);
+  }
+}

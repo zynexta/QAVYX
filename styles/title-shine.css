@@ -1,0 +1,144 @@
+/* ---------------------------------------------------------------------------
+   The green sweep across "Digital Growth Launchpad".
+   ---------------------------------------------------------------------------
+   A band of --qx-green travelling left to right along the OUTLINES of the hero
+   title card's letters, clipped to the glyphs.
+
+   IT RUNS THROUGH THE LETTERS, AND THE OUTLINE VERSION IS GONE. The client asked
+   for the border once — "i want that green flow through the whole text borders,
+   not whole in the text" — and the apparatus for it was built: a transparent
+   `-webkit-text-stroke` to widen the clip area and a black knockout copy over the
+   top to subtract the glyph, leaving the light on the ring alone.
+
+   IT WAS NEVER FINISHED, AND THE HALF THAT SHIPPED WAS THE WORST OF BOTH. The
+   knockout element was specified in `types/hero.ts`, styled here and covered by
+   `tests/unit/title-card.test.ts`, but `LaunchTitle` never rendered it — and the
+   test only reads this stylesheet, so it passed on an effect that did not exist.
+   What the beat actually painted was the stroke with nothing subtracting from it:
+   a solid letter 2.7px fatter on every edge, with the green filling it. So the
+   line jumped weight the moment the sweep began, which the client reported as
+   "why this change the appearance when i scroll".
+
+   Shown the finished outline, they chose against it — "just like before, the
+   border part not needed" — so the stroke, the knockout and its constant and
+   tests are all removed rather than left as scaffolding for a rejected design.
+   The light travels through the type the line already had, and the served
+   weight and the swept weight are the same. The reference was React Bits'
+   StarBorder, which runs the same travelling light around a button's edge; the
+   light is the part worth keeping and the bordered box is not.
+
+   ## IT RUNS DURING THE HOLD, AND ONLY DURING THE HOLD
+
+   `background-clip: text` needs `color: transparent`, and a transparent glyph is
+   a glyph whose own `opacity` and `blur()` have nothing left to fade. That is
+   the card's entrance: `titleCharProgress` assembles twenty-two characters out
+   of blur across the in-ramp, one inline style per character per frame. Painted
+   through a clipped background they would all arrive at once, fully formed, and
+   the assemble would be gone.
+
+   So `motion/timelines/titleTimeline.ts` adds `.qx-title--shine` at exactly the
+   point it already stops writing per-character styles — `atRest`, the top of the
+   hold — and takes it off if the playhead seeks back into the ramp. The two
+   effects never own the line at the same time, and neither had to be re-timed to
+   arrange that.
+
+   It is also the right beat on its own terms. The hold is the only still frame
+   in the pin, 55vh of a card that has finished being written and is waiting to
+   be read; a light moving through it is the one thing on screen.
+
+   ## Cost
+
+   One `background-position` animation on one element, alive for part of one
+   segment. Not composited — a background-position tween repaints the element's
+   own box each frame — which is affordable here for the same reason the
+   entrance can afford `blur()`: at this beat the frame is off the viewport, the
+   carousel is hidden and the rocket has not started, so a single line of ~30px
+   type is the entire paint load on screen.
+
+   ## No `data-qx-motion` prefix, because the class is the gate
+
+   Every rule in `styles/motion.css` is scoped to the attribute because those
+   rules HIDE things, and a visitor without the layer must never be served
+   `opacity: 0`. Nothing here hides anything: the served line is white type, and
+   the class that turns it into a gradient is written by the pin, which does not
+   exist for a reduced-motion or JS-disabled visitor. The media query below is
+   belt and braces for the case where the class is on the element anyway.       */
+
+#qx-launch-title.qx-title--shine .qx-title-line {
+  /* The white stops on both sides are what make this a MOVING HIGHLIGHT rather
+     than a green line. Most of the image is the colour the line already was, so
+     what travels is a few characters' worth of green — and the sentence is
+     legible at every frame, including the ones where the green is nowhere near
+     it. */
+  background-image: linear-gradient(
+    100deg,
+    var(--qx-white) 44%,
+    var(--qx-green) 50%,
+    var(--qx-white) 56%
+  );
+  /* 300%: the gradient is three line-widths wide, so the 12% ramp around the
+     green is about a third of a line — a soft edge a couple of characters deep,
+     rather than a wash across half the sentence, which is what the first pass
+     at 40/50/60 gave and it read as two-tone type instead of a light.
+
+     `no-repeat` IS SAFE ONLY BECAUSE THE KEYFRAMES STAY INSIDE 0%–100%, and
+     that is the pair to read together. A percentage `background-position` is a
+     fraction of (image width − box width), so anywhere in that range the
+     three-line-wide image still covers the one-line-wide box completely. Push a
+     keyframe outside it — 160%, which is what this file shipped with for about
+     ten minutes — and part of the box has no background at all; clipped to
+     transparent glyphs that is not a white line, it is NO line. The card went
+     black and the probe screenshot was an empty viewport. */
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* NO `-webkit-text-stroke`, AND ITS ABSENCE IS THE FIX FOR A REPORTED BUG.
+
+     It read `0.075em transparent` — 5.4px at this size — and its only job was to
+     WIDEN the area `background-clip: text` clips to, so that a black knockout
+     copy could subtract the glyph and leave the gradient on the ring alone. That
+     outline treatment has been dropped (see the note at the top of this file),
+     and a widened clip area with nothing subtracting from it does not draw a
+     ring: it draws the letter 2.7px fatter on every edge.
+
+     So the line visibly changed weight at the moment the sweep switched on, which
+     is what the client reported — "why this change the appearance when i scroll".
+     Nothing here may reintroduce it. The sweep runs through the type the line
+     already had. */
+  /* LINEAR, and not `--qx-ease-out` like the rest of this project. Every other
+     easing here shapes a transition with a start and an end; this is a light
+     crossing a line on a loop, and an eased loop pulses — slow at both edges,
+     quick through the middle — which reads as a wobble rather than as travel. */
+  /* 3.2s, and the ceiling on that is the SCROLL, not taste. The hold is 55vh of
+     a scrubbed segment; a reader moving at an ordinary pace is through it in a
+     couple of seconds, and a sweep slower than the beat it lives in is a sweep
+     most visitors only ever see the white half of. */
+  animation: qx-title-shine 3.2s linear infinite;
+}
+
+/* 100% → 0%, and that is a sweep from LEFT TO RIGHT: the background slides the
+   opposite way to the value, so the green stop sits off the left edge at 100%
+   and off the right edge at 0%.
+
+   Both ends put the green outside the box, which is what makes the loop seamless
+   — the line is plain white at the moment the position snaps back, so there is
+   no green edge visibly jumping from one side to the other. The image itself
+   never leaves; see `background-repeat` above. */
+@keyframes qx-title-shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #qx-launch-title.qx-title--shine .qx-title-line {
+    background-image: none;
+    color: var(--qx-white);
+    animation: none;
+  }
+}

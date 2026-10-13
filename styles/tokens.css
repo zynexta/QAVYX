@@ -1,0 +1,313 @@
+/**
+ * Qavyx design tokens.
+ *
+ * Colours are measured from assets/Qavyx Logo Black-PNG.png, not invented.
+ * The brand green #2ABD00 is 88% of the green pixels in the source mark.
+ * See BUILD-PLAN "Corrections to the TDD from the real brand assets".
+ *
+ * Everything is a custom property because three things re-theme at runtime:
+ * the frame stroke during Engine 2, the navbar handoff in Engine 3, and the
+ * reduced-motion path. Literals in components would make those a find-replace.
+ */
+
+:root {
+  /* --- colour ------------------------------------------------------------
+     Ratios below are measured on #000 by lib/contrast.ts and printed live at
+     /lab/tokens. Do not edit them by hand — read them off that page.
+     Roles: surface = a background (no ratio requirement),
+            ui      = graphical object, needs 3:1   (WCAG 1.4.11)
+            text    = needs 4.5:1 AA / 7:1 AAA      (WCAG 1.4.3 / 1.4.6)     */
+  --qx-black: #000000; /* surface — literal black, not near-black          */
+  --qx-ink: #0a0c0b; /* surface — frame interior, service panels         */
+  /* The step ABOVE the ink: a card or an input sitting on a framed section.
+     Named by four call sites that were already using it — `bg-qx-ink-raised`
+     appears on three CTA hovers and on `UiOnlyForm`'s panel — while neither this
+     token nor its Tailwind mapping existed, so all four resolved to no
+     background at all. It is the midpoint of --qx-ink and --qx-line, i.e. the
+     surface exactly halfway between the frame's interior and the hairline drawn
+     on it, so the three surfaces (black, ink, raised) step evenly.
+
+     THE RATIOS ABOVE ARE AGAINST #000 AND THIS IS THE SURFACE THAT MOVES THEM
+     MOST. Measured with lib/contrast.ts: on --qx-ink-raised, --qx-white is
+     16.32, --qx-grey 6.19, --qx-green 7.15 and --qx-green-dim 3.27. So every
+     text role still clears AA (4.5) and 1.4.11 still clears 3, but --qx-grey
+     stops being AAA — as it already did on --qx-ink (6.78), which the service
+     panels have used since Phase 7. It is the same trade, one step further; if
+     body copy ever needs AAA on a card, the card's fill is what has to give,
+     not the grey. */
+  --qx-ink-raised: #141816; /* surface — cards/inputs on an ink section   */
+  --qx-green: #2abd00; /* text  8.38:1 AAA — dot, cursor, active, focus    */
+  --qx-green-dim: #1a7a0e; /* ui    3.83:1 ✓1.4.11 — inactive frame stroke     */
+  --qx-white: #f2f5f3; /* text 19.13:1 AAA — wordmark, titles              */
+  --qx-grey: #919a94; /* text  7.25:1 AAA — body copy, counters           */
+  --qx-line: #1e2320; /* surface — hairlines. NEVER the sole indicator    */
+  /* The rocket's hull, measured from the client's own assets/Rocket.json artwork
+     (its body gradient flattens to #303030). A surface, not a signal: it only
+     ever fills the vehicle's silhouette in the launch sequence. */
+  --qx-hull: #303030;
+
+  /* --- type scale (px) --------------------------------------------------- */
+  --qx-text-2xs: 0.75rem; /* 12 */
+  --qx-text-xs: 0.875rem; /* 14 */
+  --qx-text-sm: 1rem; /* 16 */
+  --qx-text-md: 1.25rem; /* 20 — service description */
+  --qx-text-lg: 1.625rem; /* 26 */
+  --qx-text-xl: 2.125rem; /* 34 */
+  --qx-text-2xl: 3rem; /* 48 — service title */
+  --qx-text-3xl: 4.5rem; /* 72 */
+  --qx-text-4xl: 7rem; /* 112 */
+
+  --qx-leading-display: 1.15;
+  --qx-leading-body: 1.55;
+  --qx-tracking-display: -0.02em;
+  --qx-tracking-mono: 0.06em;
+
+  /* --- spacing ----------------------------------------------------------- */
+  --qx-space-1: 0.25rem;
+  --qx-space-2: 0.5rem;
+  --qx-space-3: 1rem;
+  --qx-space-4: 1.5rem;
+  --qx-space-5: 2.5rem;
+  --qx-space-6: 4rem;
+  --qx-space-7: 6rem;
+
+  /* --- geometry ---------------------------------------------------------- */
+  /* The logo's own radius is proportional (see motion/geometry.ts). These are
+     for DOM chrome only — the SVG frame computes its rx from viewport size. */
+  --qx-radius-sm: 4px;
+  --qx-radius-md: 12px; /* navbar logo box */
+  --qx-radius-lg: 20px; /* the 70% design frame */
+
+  /* Logo stroke is 12.2% of the Q rect's height and therefore scales with the
+     mark — this constant is only the floor used by DOM chrome. */
+  --qx-stroke: 1.5px;
+
+  /* THE FRAME'S STROKE IS NOT THE HAIRLINE, and it used to be.
+     `--qx-stroke` is the weight of a RULE: the severed rule in §5, the brutalist
+     lattice in the site index, the icons' `stroke-width`, the marquee's two
+     edges. Everything on that list is a line drawn ACROSS something. The frame
+     is not a line, it is the mark — the same shape the hero holds from `boot` to
+     the fly-through, where it is drawn at 39/2255 of the logo's width: ~9px on a
+     phone and ~13px at 1440. Wearing 1.5px, a section frame was a tenth of the
+     weight of the thing it is a reproduction of, and next to the pinned hero one
+     screen above it read as a hairline box rather than as the Q.
+
+     It does not scale with the container the way the hero's does, and it must
+     not: `computeFrameGeometry` knows its box in pixels, a DOM section's height
+     is whatever its content comes to. So this is a fixed step, chosen against
+     the hero rather than against the hairline — heavy enough to read as the mark
+     at arm's length, far short of the 1.3%-of-width the SVG frame actually uses,
+     which at 896px would be 12px and a cage.
+
+     TWO WEIGHTS, because the frame system already has two scales (see
+     styles/frame.css): a section is the container and a card is one thing inside
+     it. They differed only in ink; they now differ in weight too, which is what
+     keeps five card frames inside a section frame from reading as six equal
+     boxes. */
+  --qx-stroke-frame: 3px; /* section scale — the mark as a container    */
+  --qx-stroke-card: 2px; /* card scale — the mark as a surface edge    */
+
+  /* --- the Q, worn by a DOM container -------------------------------------
+     The mark's opening, as a fraction of the box it is drawn on. These are the
+     complements of `FRAME_BAR_FRACTION` and `FRAME_STUB_FRACTION` in
+     motion/geometry.ts — the bowl's measured 84 x 72 opening against its
+     424 x 292 box — and `tests/unit/tokens-drift.test.ts` fails if the two ever
+     disagree.
+
+     PROPORTIONAL HERE, unlike the hero. The hero sizes its notch from the STROKE
+     (`gapFor`, `GAP_GROWTH`) because at 1008px wide with a 13px stroke a
+     proportional gap is a corner that has fallen off. A DOM container wears the
+     mark as a 1.5px hairline, where there is no stroke weight to read the gap
+     against — proportion is the only cue left, and the mark's own proportion is
+     what makes it recognisable as the Q rather than as a nicked rectangle.
+
+     The `min()` ceilings stop the opening growing without limit on a very wide
+     container, where 19.8% would be most of a screen. */
+  --qx-open-gap-w: min(19.8%, 15rem);
+  --qx-open-gap-h: min(24.7%, 10rem);
+
+  /* The mark at CARD scale — see styles/frame.css, which caps the opening in
+     `rem` so it keeps its own shape on a card that is nothing like the mark's
+     aspect ratio. Its ink is quieter too: a section frame is the container, a
+     card frame is one thing inside it, and five card frames at full
+     --qx-green-dim turn a section into a grid of green boxes. Mixed against
+     --qx-line rather than faded with
+     `opacity`, because opacity on the pseudo-element would fade the whole frame
+     including any state it later takes on. It is decorative in every place it is
+     used — every card carries a real heading and real prose — so it is not held
+     to 1.4.11's 3:1; the moment a card is hovered or focused it goes to the full
+     --qx-green-dim, which is. */
+  --qx-frame-quiet: color-mix(in srgb, var(--qx-green-dim) 62%, var(--qx-line));
+
+  /* --- motion -------------------------------------------------------------
+     The reveal layer (styles/motion.css) and the frame draw (styles/frame.css)
+     read these, so a change of pace is one edit rather than thirty.
+
+     `rise` is expo-out: almost all of the distance is covered in the first third
+     and it settles without a bounce, which is what makes a masked line of type
+     read as arriving rather than as sliding. `out` is the gentler quintic used
+     for opacity, colour and the accordion — nothing that needs to feel launched.
+
+     DURATIONS. These are past the 150-300ms this project uses for
+     micro-interactions, and deliberately: those are hovers and presses, where
+     the user is waiting on their own input. These are entrances that nobody is
+     waiting on, and at 300ms a diagonal across a 1000px section is a flicker
+     rather than a stroke. `--qx-rv-lead` is what makes the pair read as one
+     event: the type starts a beat into the frame's draw, so the container
+     appears to arrive first and the copy to land in it.
+
+     THEY WERE RAISED ~1.4x ON THE CLIENT'S DIRECTION — "when i scroll the
+     section and text animation happen fast that is bad" — from 560/760/700/
+     90/70. The whole set moved by the same factor rather than one value being
+     nudged, because the ratios between them ARE the effect: the frame's draw
+     has to outlast the copy that lands in it, the lead has to stay a fraction
+     of the draw, and the step has to stay well under the item's own duration or
+     a six-card grid stops reading as one arrival and becomes a queue.
+
+     WHAT WAS **NOT** CHANGED IS THE TRIGGER, and that is the other half of
+     "too fast". `lib/reveal.ts` fires at `rootMargin: -12%` — a section starts
+     revealing once its top has reached 88% of the viewport, which is while the
+     reader is still arriving at it. Moving that later would make the animation
+     start under the reader's eye instead of ahead of it, which is a different
+     complaint from this one. Slower at the same trigger is what was asked for. */
+  --qx-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --qx-ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
+  --qx-rv-dur: 820ms;
+  --qx-rv-rise: 1040ms;
+  --qx-rv-frame: 920ms;
+  --qx-rv-lead: 120ms;
+  --qx-rv-step: 100ms;
+  /* The accordion is a micro-interaction — the user pressed something and is
+     waiting for it — so it is held to the 150-300ms band the rest of the site's
+     presses use. */
+  --qx-disclosure-dur: 300ms;
+
+  /* --- §4's moving band ---------------------------------------------------
+     A DURATION FOR HALF THE TRACK, not a speed, because CSS cannot animate at a
+     rate: `qx-marquee-run` translates -50% and this is how long that takes. Half
+     the track is the six sectors once, which is roughly 1800px on a desktop —
+     so 40s is about 45px/s, slow enough to read a label that is passing and far
+     under the speed that would pull the eye off §5's heading below it.
+
+     It is here rather than in `styles/marquee.css` for the reason everything
+     else is: this is the number anyone will want to change first, and it should
+     be findable next to the other durations rather than 60 lines into a
+     component's stylesheet.
+
+     The fade is generous — a tenth of the viewport at each edge — because the
+     labels are 12-25 characters of tracked-out mono, and a narrow fade cuts one
+     mid-word in a way that reads as clipping rather than as depth.            */
+  --qx-marquee-dur: 40s;
+  --qx-marquee-fade: 10%;
+
+  /* --- the floating chat button ------------------------------------------
+     Its size and inset live here rather than as Tailwind classes because the
+     FOOTER has to know them: the draft requires that the button never obstruct
+     footer content, and the only way to guarantee that is to reserve the strip
+     it occupies as the footer's bottom padding. Two hand-tuned numbers in two
+     files drift the first time either is nudged — and the symptom is the button
+     sitting on the copyright line at the very bottom of every page, which is
+     the last place anyone looks.
+
+     `reserve` is the button's full height (size + both insets) rather than just
+     `size + inset`, so the clearance holds when a viewport rounds a rem down.
+     One inset at every width: 1.5rem is the conventional floating-action inset,
+     and the spacing scale's next step up (4rem) would push the reserve to
+     11rem — a hand's width of empty footer to protect a 3rem button. */
+  /* THE COLUMN EVERY SECTION IS LAID OUT IN, and it is one value because it was
+     three: nine components carried `max-w-5xl`, `Footer` carried `max-w-7xl`,
+     and the footer was visibly wider than every section above it on the same
+     page. `HeroStatic` derives its poster's ceiling from this too.
+
+     64rem to 80rem AT `xl`, and the step rather than a single larger number is
+     deliberate. Every measured layout decision in this project was taken against
+     a 1024px column — `LaunchStatic`'s three-across arithmetic, `ServicePanel`'s
+     `lg` boundary, the reduced-motion poster's cap — so widening it everywhere
+     would have quietly invalidated all of them. Below 1280px nothing moves; the
+     extra 16rem is spent only where the complaint was, which is a wide desktop
+     leaving ~220px of dead margin down each side.
+
+     READ AS `max-w-[var(--qx-shell)]`, an arbitrary value, and NOT as a key in
+     `tailwind.config.ts`'s theme. Every other token here is registered there —
+     the colours, the spacing scale, the z-indices — and this one was too, for
+     about ten minutes. A theme key is only compiled when the config is loaded,
+     which `next dev` does at startup and not on change, so a running dev server
+     emitted no rule for the class at all: `max-width: none`, every section
+     full-bleed, and nothing in the terminal to say why. The JIT reads an
+     arbitrary value out of the markup it is already watching.
+
+     THE BREAKPOINT MUST STAY IN STEP WITH `tailwind.config.ts`'s `xl`. It is
+     1280px in both places and there is no way to share one value across a media
+     query and a Tailwind screen — `tests/unit/shell.test.ts` holds them
+     together instead. */
+  --qx-shell: 64rem;
+
+  /* THE HEADER'S HEIGHT, and it is a token because two other things measure
+     against it: `scroll-padding-top` in `app/globals.css`, so an anchored
+     section lands below the bar rather than behind it, and the bar's own box.
+     Derived from what is IN the bar — a 2.75rem control with `--qx-space-3`
+     above and below — rather than typed as a round number, so changing the
+     control's target size moves the landing offset with it. */
+  --qx-nav-h: calc(2.75rem + 2 * var(--qx-space-3));
+
+  --qx-float-size: 3rem;
+  --qx-float-inset: var(--qx-space-4);
+  /* The button is `position: fixed` against the viewport EDGE, which on a phone
+     is under the home indicator and, in landscape, under the notch. `env()`
+     resolves to 0px everywhere else, so this costs nothing on a desktop. */
+  --qx-float-bottom: calc(var(--qx-float-inset) + env(safe-area-inset-bottom, 0px));
+  --qx-float-right: calc(var(--qx-float-inset) + env(safe-area-inset-right, 0px));
+  /* What the footer keeps clear beneath its content: the button's own height
+     plus both of its insets, safe area included. */
+  --qx-float-reserve: calc(
+    var(--qx-float-size) + var(--qx-float-inset) + var(--qx-float-bottom)
+  );
+
+  /* --- z-index map ------------------------------------------------------- */
+  --qx-z-grain: 5;
+  /* The two banks of light outside the design frame (components/hero/FrameRays).
+     BELOW THE INK FIELD, and that is the whole enforcement of "the light is
+     never inside the frame": the stage paints the frame's opaque interior over
+     it at 10, and from the fly-through onward the ink field covers it at 8. So
+     the layer cannot leak into the workspace, and cannot survive into the launch
+     even if a beat gate were removed. */
+  --qx-z-rays: 7;
+  /* The ink field the aperture hands its fill off to. BEHIND the stage on
+     purpose: it takes over painting the interior while the frame's stroke keeps
+     flying outward on top of it, and because both surfaces are --qx-ink the
+     swap is bit-identical with nothing to cross-fade. */
+  --qx-z-ink: 8;
+  /* The scrubbed launch film (components/launch/RocketVideo). BETWEEN the ink
+     field and the stage, which is the slot the SVG rocket used to occupy from
+     inside the stage: above the ink field because the aperture has just filled
+     the screen with it and the film has to be on top of that flat black, and
+     below the stage because the frame's stroke is still flying outward up there
+     and the pin's own layers must keep outranking this one. */
+  --qx-z-rocket: 9;
+  --qx-z-stage: 10; /* the single fixed SVG */
+  --qx-z-copy: 20; /* h1, subhead, panels */
+  --qx-z-nav: 30;
+  /* The floating WhatsApp button. ABOVE the navbar so the small-screen menu
+     panel, which drops out of the navbar, cannot cover it — and below the
+     cursor, which must never be occluded by anything. */
+  --qx-z-float: 35;
+  /* THE OPEN MENU OUTRANKS THE FLOATING BUTTON, which is the only thing between
+     them. The panel is full-screen on a phone and a right-hand column on a
+     desktop, and `--qx-float-right` puts the WhatsApp button inside that column
+     at both sizes — so at `--qx-z-nav` it painted through an open menu and sat
+     on top of the socials row. The button also fades out while the menu is open
+     (`styles/menu.css`), and this is the half of that which does not depend on a
+     transition having finished. */
+  --qx-z-menu: 38;
+  --qx-z-cursor: 40; /* above everything it must not be occluded by */
+  --qx-z-skip: 50; /* skip link outranks the cursor */
+}
+
+/* The column's one step. See `--qx-shell` above for why it is a step and not a
+   larger constant, and why 1280px here has to equal `xl` in
+   `tailwind.config.ts`. */
+@media (min-width: 1280px) {
+  :root {
+    --qx-shell: 80rem;
+  }
+}

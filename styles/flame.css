@@ -1,0 +1,152 @@
+/* ---------------------------------------------------------------------------
+   The rocket's exhaust — fire, rather than a shape that gets longer.
+   ---------------------------------------------------------------------------
+   THE CLIENT'S NOTE IS THE BRIEF: "the rocket fire not animating i want animate
+   the rocket fire better like fire."
+
+   They are right, and the diagnosis is specific rather than general. The flame
+   was never static — `launchFlameScale` stretches it and `launchExhaust` fades
+   it — but BOTH are pure functions of scroll position. Stop scrolling and the
+   fire stops, which is exactly the moment a reader looks at it. And the whole
+   plume was one flat `--qx-green` fill at two opacities, which at 40px on screen
+   is a leaf, not a flame.
+
+   So two things, and they are different fixes to the same complaint:
+
+   1. **A flicker that does not depend on the scroll.** Fire is not a shape that
+      changes size, it is a shape that will not hold still. Two tongues, two
+      cycle lengths that do not divide into each other (0.37s and 0.61s), so the
+      pair never visibly repeats — and irregular keyframe stops within each, so
+      neither reads as a pulse.
+
+   2. **A hot core.** Fire reads as fire because it has a temperature gradient:
+      pale at the centre, coloured at the edge. The core is now `--qx-white` — the
+      mark's own ink, the same white the wordmark is set in — inside the green
+      plume. It is the only white on the vehicle, which is the correct thing for
+      it to be. A real gradient would say it better and cannot be afforded: the
+      stage is capped at 60 nodes (TDD §12, `phase8-aperture.spec.ts`) and a
+      `<radialGradient>` with two stops is three of them.
+
+   ## This is the project's THIRD idle loop, and it is an exception on the record
+
+   `app/globals.css` allows exactly one (the breathing dot); §4's marquee is the
+   second, made on the client's explicit instruction. This is the third, on the
+   same authority. What keeps it honest:
+
+   - **It is CSS, so it costs the bundle nothing** — the same deal
+     `styles/marquee.css` has.
+   - **It cannot be seen except during the launch.** `#qx-launch-layer` is
+     `visibility: hidden` until the segment starts and the exhaust group's own
+     opacity is `launchExhaust(t)`, which is 0 before ignition and 0 through the
+     stall. So the engine still visibly dies and relights on the old timing; the
+     flicker is what the flame does while it is lit, not a second beat.
+   - **It never fights the timeline.** The timeline writes `transform` and
+     `opacity` on `#qx-rocket-exhaust`, the GROUP. These rules only ever touch
+     the two paths inside it, which nothing else writes to. A CSS animation on
+     the group would have overridden the scrub and frozen the thrust.
+
+   ## Reduced motion
+
+   `app/globals.css` sets `animation-duration: 0.01ms` and
+   `animation-iteration-count: 1` for these visitors, which FINISHES a loop
+   rather than stopping it — the trap §4's marquee had to be rescued from by
+   name. It is harmless here by construction: 0% and 100% are the same
+   untransformed rest state, so a loop run to completion parks on exactly the
+   frame a still flame would have. (In practice it never arrives: under reduce
+   there is no motion layer at all and this element is never rendered.)         */
+
+.qx-flame {
+  /* The flame is authored hanging off the nozzle at y≈16-18 and reaching down
+     to y≈38 (core) / y≈48 (plume), so the top of its own fill box IS its
+     attachment point. Scaling about `50% 0` makes it lengthen and lick away
+     from the vehicle instead of pumping through it. `fill-box` because the
+     element sits inside two nested group transforms — `view-box` would resolve
+     the origin against the stage's coordinates, several transforms away. */
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+/* The outer plume: bigger, slower, and it breathes its opacity as well as its
+   length — this is the part that reads as heat haze rather than as a tongue. */
+.qx-flame--plume {
+  fill: var(--qx-green);
+  animation-name: qx-flame-plume;
+  animation-duration: 0.61s;
+}
+
+/* The core: pale, tight and quick. Shorter cycle and a narrower range, so it
+   flickers where the plume rolls. */
+.qx-flame--core {
+  fill: var(--qx-white);
+  animation-name: qx-flame-core;
+  animation-duration: 0.37s;
+}
+
+/* Stops at 12/27/41/58/73/89 rather than at sixths. Evenly spaced stops give a
+   sine — a pulse — however jagged the values are; uneven ones are what make it
+   read as combustion. Every value returns to the identity at 0% and 100%, which
+   is also what makes the reduced-motion collapse above a no-op. */
+@keyframes qx-flame-core {
+  0% {
+    transform: scale(1, 1);
+  }
+  12% {
+    transform: scale(0.93, 1.14) translateX(0.35px);
+  }
+  27% {
+    transform: scale(1.07, 0.89);
+  }
+  41% {
+    transform: scale(0.96, 1.17) translateX(-0.45px);
+  }
+  58% {
+    transform: scale(1.05, 0.93);
+  }
+  73% {
+    transform: scale(0.94, 1.1) translateX(0.25px);
+  }
+  89% {
+    transform: scale(1.03, 0.96);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* The plume's opacity range straddles the 0.3 the element used to carry as a
+   presentation attribute, so its average brightness is unchanged — what moved
+   is that it no longer sits still. (A CSS animation outranks a presentation
+   attribute, so the old `opacity={0.3}` is gone from the component rather than
+   left to be overridden invisibly.) */
+@keyframes qx-flame-plume {
+  0% {
+    transform: scale(1, 1);
+    opacity: 0.3;
+  }
+  18% {
+    transform: scale(1.09, 0.87) translateX(-0.5px);
+    opacity: 0.21;
+  }
+  35% {
+    transform: scale(0.91, 1.2);
+    opacity: 0.39;
+  }
+  52% {
+    transform: scale(1.06, 0.94) translateX(0.6px);
+    opacity: 0.25;
+  }
+  68% {
+    transform: scale(0.95, 1.13);
+    opacity: 0.36;
+  }
+  85% {
+    transform: scale(1.04, 0.92) translateX(-0.3px);
+    opacity: 0.24;
+  }
+  100% {
+    transform: scale(1, 1);
+    opacity: 0.3;
+  }
+}
