@@ -133,7 +133,7 @@ export function ProblemGrid() {
 
   return (
     <section id="the-problem" aria-labelledby="problem-section-title" className="pt-8 sm:pt-12 lg:pt-6 pb-6 sm:pb-8 lg:pb-10 relative overflow-hidden bg-gradient-to-b from-black via-[#040e06] to-black">
-      <script dangerouslySetInnerHTML={{ __html: `(function(){try{var hard=sessionStorage.getItem('qx_hard_refresh')==='true';var scrolled=sessionStorage.getItem('qx_scrolled_to_problem')==='true'||sessionStorage.getItem('qx_scrolled_past_hero')==='true';if(!hard&&scrolled){var el=document.getElementById('the-problem');if(el){var y=el.getBoundingClientRect().top+window.scrollY;if(y>0&&Math.abs(window.scrollY-y)>1){window.scrollTo(0,y);document.documentElement.removeAttribute('data-qx-restoring-scroll');}}}}catch(e){}})();` }} />
+      <script dangerouslySetInnerHTML={{ __html: `(function(){try{var hard=sessionStorage.getItem('qx_hard_refresh')==='true';var scrolled=sessionStorage.getItem('qx_scrolled_to_problem')==='true'||sessionStorage.getItem('qx_scrolled_past_hero')==='true';if(!hard&&scrolled){var el=document.getElementById('the-problem');if(el){var y=el.getBoundingClientRect().top+window.scrollY;if(y>0&&Math.abs(window.scrollY-y)>1){window.scrollTo(0,y);}document.documentElement.removeAttribute('data-qx-restoring-scroll');}}}catch(e){}})();` }} />
       <div {...reveal} className="relative px-4 pt-4 pb-2 sm:px-6 md:pt-6 md:pb-2 lg:px-8 max-w-[var(--qx-shell)] mx-auto">
         
         {/* Deep atmospheric green background glow */}

@@ -139,6 +139,7 @@ if (!isHardRefresh && scrolledToProblem) {
         if (y > 0 && Math.abs(window.scrollY - y) > 1) {
           window.scrollTo(0, y);
         }
+        r.removeAttribute('data-qx-restoring-scroll');
         return true;
       }
     } catch(e){}

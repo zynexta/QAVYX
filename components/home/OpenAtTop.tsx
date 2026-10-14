@@ -115,6 +115,10 @@ export function OpenAtTop() {
 
     const onUserInteraction = () => {
       userScrolled = true;
+      try {
+        document.documentElement.removeAttribute('data-qx-restore-problem');
+        document.documentElement.removeAttribute('data-qx-restoring-scroll');
+      } catch {}
     };
 
     window.addEventListener('wheel', onUserInteraction, { passive: true, once: true });
@@ -158,6 +162,15 @@ export function OpenAtTop() {
             } catch {}
           };
         } catch {}
+
+        setTimeout(() => {
+          if (!cancelled) {
+            try {
+              document.documentElement.removeAttribute('data-qx-restore-problem');
+              document.documentElement.removeAttribute('data-qx-restoring-scroll');
+            } catch {}
+          }
+        }, 150);
       }).catch(() => {});
 
       try {
@@ -210,12 +223,12 @@ export function OpenAtTop() {
       const target = document.getElementById('the-problem');
       if (target) {
         const rect = target.getBoundingClientRect();
-        if (rect.top <= window.innerHeight * 0.8) {
+        if (rect.top <= window.innerHeight * 0.5) {
           try {
             sessionStorage.setItem('qx_scrolled_to_problem', 'true');
             sessionStorage.setItem('qx_scrolled_past_hero', 'true');
           } catch {}
-        } else if (currentY < 200 && userScrolled) {
+        } else if (rect.top > 50 || currentY < 200) {
           try {
             sessionStorage.removeItem('qx_scrolled_to_problem');
             sessionStorage.removeItem('qx_scrolled_past_hero');
@@ -223,7 +236,7 @@ export function OpenAtTop() {
             document.documentElement.removeAttribute('data-qx-restoring-scroll');
           } catch {}
         }
-      } else if (currentY < 200 && userScrolled) {
+      } else if (currentY < 200) {
         try {
           sessionStorage.removeItem('qx_scrolled_to_problem');
           sessionStorage.removeItem('qx_scrolled_past_hero');

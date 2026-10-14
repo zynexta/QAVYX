@@ -253,20 +253,14 @@
      pin-spacer height (100svh hero element + 1015vh scroll pin budget = calc(100svh + 1015vh))
      immediately on frame 1 before GSAP hydrates so #the-problem is in its exact
      final document coordinates with zero layout shift or rocket flash. */
-  html[data-qx-restore-problem] #qx-hero-reserve {
+  html[data-qx-restore-problem]:not([data-qx-hero='live']) #qx-hero-reserve {
     height: calc(100svh + 1015vh) !important;
     min-height: calc(100svh + 1015vh) !important;
   }
-  html[data-qx-restore-problem] #qx-hero-static {
+  html[data-qx-restore-problem]:not([data-qx-hero='live']) #qx-hero-static {
     display: none !important;
   }
-  html[data-qx-restore-problem] #qx-rocket-film {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-  html[data-qx-restore-problem] .qx-header--deferred {
+  html[data-qx-restore-problem]:not([data-qx-hero='live']) .qx-header--deferred {
     position: fixed !important;
     inset-inline: 0 !important;
     top: 0 !important;

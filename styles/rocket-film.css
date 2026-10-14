@@ -64,7 +64,7 @@
      opacity 0 for the whole of the launch segment anyway (swept across progress
      0.68-0.90). If its fade is ever retimed to overlap this layer's, the bars
      would start showing a #000000/#0a0c0b edge — this is the note that says so. */
-  background: none;
+  background-color: transparent;
 
   /* The ultra-narrow rule at the bottom sizes the film WIDER than the viewport
      on purpose. This is what keeps that overflow inside the layer rather than on
