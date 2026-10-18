@@ -515,15 +515,23 @@ export default function CampaignProcess() {
 
         </div>
 
-        {/* ================= BOTTOM TAGLINE ================= */}
-        <div className="mt-14 flex items-center justify-center text-center py-4 border-t border-white/10">
-          <div className="flex items-center gap-3 sm:gap-4 justify-center">
-            <div className="h-px w-8 sm:w-16 bg-[#2ABD00]/30" />
-            <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.25em] text-[#9A9F9B] uppercase">
-              TURNING STRATEGY INTO REAL GROWTH.
-            </span>
-            <div className="h-px w-8 sm:w-16 bg-[#2ABD00]/30" />
-          </div>
+        {/* ================= BOTTOM CTA ================= */}
+        <div className="mt-14 flex items-center justify-center text-center py-6 border-t border-white/10">
+          <WhatsAppLink
+            ariaLabel="Chat With Us"
+            className="group inline-flex items-center justify-center gap-2.5 rounded-sm border border-[#2ABD00]/60 bg-transparent px-5 sm:px-6 py-2 sm:py-2.5 font-mono text-[11px] sm:text-xs font-bold uppercase tracking-[0.25em] text-[#2ABD00] transition-all duration-300 hover:border-[#2ABD00] hover:bg-[#2ABD00]/10 hover:shadow-[0_0_16px_rgba(42,189,0,0.35)] cursor-pointer"
+          >
+            <span>CHAT WITH US</span>
+            <svg
+              viewBox="0 0 24 24"
+              className="w-3.5 h-3.5 stroke-current fill-none stroke-[2.2] transition-transform duration-300 group-hover:translate-x-1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </WhatsAppLink>
         </div>
 
       </div>

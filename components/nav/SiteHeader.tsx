@@ -161,7 +161,7 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
             )}
 
             <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* Region Switcher: INDIA / GCC - Exact matching height (h-[2.25rem] sm:h-[2.5rem]) */}
+              {/* Region Switcher: INDIA / GCC - Hidden temporarily until GCC website is launched:
               <div
                 id="qx-region-switcher"
                 aria-label="Region switcher: India or GCC"
@@ -173,13 +173,19 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
                     if (typeof window !== 'undefined') window.location.href = '/';
                   }}
                   aria-label="Switch region to India"
-                  className={`flex h-full items-center justify-center px-2 sm:px-2.5 rounded-[3px] transition-all duration-200 cursor-pointer border-none bg-transparent ${
+                  className={`flex h-full items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 rounded-[3px] transition-all duration-200 cursor-pointer border-none bg-transparent ${
                     !isGcc
                       ? 'bg-qx-green/20 text-qx-green font-bold shadow-[inset_0_0_8px_rgba(42,189,0,0.3)]'
                       : 'text-qx-grey hover:text-qx-white opacity-70'
                   }`}
                 >
-                  IND
+                  <img
+                    src={!isGcc ? '/india-map.png' : '/india-map-grey.png'}
+                    alt=""
+                    aria-hidden="true"
+                    className="w-[12px] h-[14px] sm:w-[13px] sm:h-[15px] object-contain shrink-0"
+                  />
+                  <span>IND</span>
                 </button>
                 <span className="text-qx-line select-none px-1 text-[11px] font-normal">/</span>
                 <button
@@ -197,6 +203,7 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
                   GCC
                 </button>
               </div>
+              */}
 
               {/* WhatsApp ICON ONLY Button - Exact matching height & styling (h-[2.25rem] sm:h-[2.5rem]) */}
               <WhatsAppLink

@@ -60,7 +60,11 @@ function go(path: string) {
 describe('the current page in both navigations', () => {
   it.each([
     ['/', '/'],
-    ['/services', '/services'],
+    ['/growth-marketing', '/growth-marketing'],
+    ['/social-content', '/social-content'],
+    ['/ai-automation', '/ai-automation'],
+    ['/build-scale', '/build-scale'],
+    ['/launch', '/launch'],
     ['/faq', '/faq'],
     ['/who-we-are', '/who-we-are'],
     ['/who-we-are/contact', '/who-we-are/contact'],
@@ -68,25 +72,8 @@ describe('the current page in both navigations', () => {
     expect(go(path)).toEqual({ menu: [href], footer: [href] });
   });
 
-  /**
-   * THE FIVE PILLARS ARE FOOTER-ONLY NOW, and they behave exactly like
-   * `/launchpad` below rather than like a bug.
-   *
-   * They were in both lists until the client took them out of the menu
-   * (`MENU_NAV` in `content/site.ts`). The menu must light NOTHING on them — not
-   * fall back to Home, which is its nearest entry by prefix and would tell a
-   * visitor on `/growth-marketing` that they are on the homepage. That the
-   * winner is computed across BOTH lists before either is lit is what makes this
-   * come out right, and it is the same property `/launchpad` proves.
-   */
-  it.each([
-    ['/growth-marketing'],
-    ['/social-content'],
-    ['/ai-automation'],
-    ['/build-scale'],
-    ['/launch'],
-  ])('lights a pillar in the footer alone, the menu having no entry: %s', (path) => {
-    expect(go(path)).toEqual({ menu: [], footer: [path] });
+  it('lights nothing on /services since it is removed from both navigations', () => {
+    expect(go('/services')).toEqual({ menu: [], footer: [] });
   });
 
   /**
@@ -123,7 +110,7 @@ describe('the current page in both navigations', () => {
 
   /** A trailing slash is the same page, and `/` itself must survive the trim. */
   it('ignores a trailing slash', () => {
-    expect(go('/services/').menu).toEqual(['/services']);
+    expect(go('/growth-marketing/').menu).toEqual(['/growth-marketing']);
     expect(go('/').menu).toEqual(['/']);
   });
 
@@ -161,8 +148,8 @@ describe('the current page in both navigations', () => {
    */
   it('re-marks on replaceState', () => {
     go('/faq');
-    history.replaceState({}, '', '/services');
-    expect(lit('#qx-menu-panel')).toEqual(['/services']);
+    history.replaceState({}, '', '/growth-marketing');
+    expect(lit('#qx-menu-panel')).toEqual(['/growth-marketing']);
   });
 
   /**

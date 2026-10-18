@@ -141,18 +141,10 @@ export function ProblemGrid() {
 
         {/* Section Header */}
         <div className="text-center max-w-[56rem] mx-auto mb-6 sm:mb-10 lg:mb-14 relative z-30">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2.5 mb-2 max-w-full">
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-r from-transparent to-[#2ABD00]/60 shrink" />
-            <span className="font-mono text-[9.5px] xs:text-[10px] sm:text-xs font-semibold tracking-[0.18em] xs:tracking-[0.2em] sm:tracking-[0.3em] text-[#2ABD00] uppercase shrink-0">THE PROBLEM</span>
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-l from-transparent to-[#2ABD00]/60 shrink" />
-          </div>
-
           <h2 id="problem-section-title" className="qx-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] font-bold text-qx-white tracking-tight sm:whitespace-nowrap">
             Why Growth Feels <span className="text-qx-green drop-shadow-[0_0_18px_rgba(42,189,0,0.6)]">So Hard?</span>
           </h2>
-          <p className="mt-2 text-2xs sm:text-xs font-mono uppercase tracking-[0.25em] text-qx-grey/80 max-w-xl mx-auto">
-            GREAT IDEAS OFTEN GET STUCK FOR THE WRONG REASONS
-          </p>
+          <div className="w-12 sm:w-16 h-[2px] bg-[#2ABD00] rounded-full mx-auto mt-3.5" />
         </div>
 
         {/* ================================================================

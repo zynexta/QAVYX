@@ -1,7 +1,7 @@
 import { FinalCta } from '@/components/home/FinalCta';
 import { OpenAtTop } from '@/components/home/OpenAtTop';
 import { SiteIndex } from '@/components/home/SiteIndex';
-import { TrustStrip } from '@/components/home/TrustStrip';
+// import { TrustStrip } from '@/components/home/TrustStrip';
 import { WhoWeServe } from '@/components/home/WhoWeServe';
 import { WhyQavyx } from '@/components/home/WhyQavyx';
 import { HeroMount } from '@/components/hero/HeroMount';
@@ -172,7 +172,9 @@ export default function Home() {
       <SiteHeader deferred />
 
       <LaunchStatic />
+      {/* Hidden temporarily until backend is connected:
       <TrustStrip />
+      */}
       <WhyQavyx />
       <WhoWeServe />
       <SiteIndex />

@@ -170,28 +170,19 @@ export const FOOTER_NAV: readonly NavItem[] = [
 ] as const;
 
 /**
- * The header menu's list — `PRIMARY_NAV` WITHOUT THE FIVE PILLARS, then Contact.
+ * The header menu's list — Home, Who We Are, Our Projects, the five service
+ * pillars (Growth Marketing, Social & Content, AI & Automation, Build & Scale, Launch),
+ * FAQ, and Contact Us.
  *
- * On the client's direction. The menu carried all eleven routes and the five
- * pillars were more than half of it; what is left is the six that describe the
- * company and the way to reach it — Home, Who We Are, Our Projects, Our
- * Services, FAQ, Contact Us.
- *
- * SUBTRACTED FROM `SITE_INDEX.pillars`, NOT RETYPED AS A SHORTER LIST. A literal
- * six would silently stop matching the day a pillar is renamed or a seventh
- * route is added to `PRIMARY_NAV`, and the failure would be a menu quietly
- * missing an entry rather than anything that trips a test. Derived, the two can
- * only disagree if `SITE_INDEX.pillars` and `PRIMARY_NAV` disagree, which
- * `site-content.test.ts` already forbids.
- *
- * THE PILLARS ARE STILL REACHABLE, and that is the whole reason this is safe:
- * `FOOTER_NAV` above carries all eleven on every page, `/services` indexes the
- * five, and the homepage's own index is the five. The menu is a shortcut to the
- * site, not the only route through it — see the note on `SITE_INDEX`, which
- * makes the same argument in the other direction about the company pages.
+ * On the client's direction: "Our Services" single link is removed and replaced
+ * with direct access to each of the 5 services.
  */
 export const MENU_NAV: readonly NavItem[] = [
-  ...PRIMARY_NAV.filter((item) => !SITE_INDEX.pillars.some((p) => p.href === item.href)),
+  { href: '/', label: 'Home' },
+  { href: '/who-we-are', label: 'Who We Are' },
+  { href: '/projects', label: 'Our Projects' },
+  ...SITE_INDEX.pillars,
+  { href: '/faq', label: 'FAQ' },
   CONTACT_NAV,
 ] as const;
 

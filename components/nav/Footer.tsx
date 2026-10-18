@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import {
   CONTACT,
+  CONTACT_NAV,
   CTA_LABEL,
   FOOTER_COPY,
   FOOTER_NAV,
   LEGAL_LINKS,
   ORGANISATION,
+  SITE_INDEX,
   SOCIAL,
 } from '@/content/site';
 import { InstagramIcon, LinkedInIcon, MailIcon, PhoneIcon, PinIcon } from '@/components/icons';
@@ -59,6 +61,19 @@ const SOCIAL_ICONS: Record<string, (props: { className?: string }) => React.JSX.
   Instagram: InstagramIcon,
   LinkedIn: LinkedInIcon,
 };
+
+const FOOTER_GENERAL_NAV = [
+  { href: '/', label: 'Home' },
+  { href: '/who-we-are', label: 'Who We Are' },
+  { href: '/projects', label: 'Our Projects' },
+  { href: '/launchpad', label: 'Launchpad' },
+  { href: '/faq', label: 'FAQ' },
+  CONTACT_NAV,
+] as const;
+
+const FOOTER_SERVICE_NAV = [
+  ...SITE_INDEX.pillars,
+] as const;
 
 export function Footer() {
   return (
@@ -119,43 +134,47 @@ export function Footer() {
               >
                 {FOOTER_COPY.navHeading}
               </h3>
-              <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
-                {FOOTER_NAV.map((item) => (
-                  <li key={item.href}>
-                    {item.href === '/' ? (
-                      // HomeLink clears the scroll-restore sessionStorage flags
-                      // so the homepage always opens at the very top, not at
-                      // the position the visitor was reading when they left.
-                      <HomeLink
-                        className="block py-1 text-xs text-qx-grey transition-colors hover:text-qx-white focus-visible:text-qx-white"
-                        suppressHydrationWarning
-                      >
-                        {item.label}
-                      </HomeLink>
-                    ) : (
+              <div className="mt-3 grid grid-cols-2 gap-x-4">
+                {/* FOOTER_NAV.map */}
+                <ul className="flex flex-col gap-y-1">
+                  {FOOTER_GENERAL_NAV.map((item) => (
+                    <li key={item.href}>
+                      {item.href === '/' ? (
+                        <HomeLink
+                          className="block py-1 text-xs text-qx-grey transition-colors hover:text-qx-white focus-visible:text-qx-white"
+                          suppressHydrationWarning
+                        >
+                          {item.label}
+                        </HomeLink>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          prefetch={true}
+                          className="block py-1 text-xs text-qx-grey transition-colors hover:text-qx-white focus-visible:text-qx-white"
+                          suppressHydrationWarning
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                <ul className="flex flex-col gap-y-1">
+                  {FOOTER_SERVICE_NAV.map((item) => (
+                    <li key={item.href}>
                       <Link
                         href={item.href}
                         prefetch={true}
                         className="block py-1 text-xs text-qx-grey transition-colors hover:text-qx-white focus-visible:text-qx-white"
-                        // `aria-current` is on one of these by the time React
-                        // hydrates — `lib/route-mark.ts` writes it at
-                        // DOMContentLoaded, and the client bundle arrives after
-                        // that. Without this, hydration reports an attribute the
-                        // server did not render on every page load; React's own
-                        // remedy for an attribute a pre-paint script owns, and the
-                        // same one `app/layout.tsx` uses for `data-qx-motion`.
-                        //
-                        // It covers this element's own attributes and nothing
-                        // inside it, which is exactly the scope wanted: the label
-                        // is still compared.
                         suppressHydrationWarning
                       >
                         {item.label}
                       </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </nav>
 
             <div className="flex flex-col gap-6 max-md:rounded-[12px] max-md:border max-md:border-qx-line max-md:bg-[#050705]/80 max-md:p-5">

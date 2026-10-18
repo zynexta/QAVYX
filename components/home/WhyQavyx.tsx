@@ -25,31 +25,16 @@ export function WhyQavyx() {
       <div {...reveal} className="relative w-full py-2">
         {/* Section Header styled identically to Problem & Solution sections */}
         <div className="text-center max-w-[56rem] mx-auto mb-4 sm:mb-6 lg:mb-8 relative z-30">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2.5 mb-2 max-w-full">
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-r from-transparent to-[#2ABD00]/60 shrink" />
-            <span className="font-mono text-[9.5px] xs:text-[10px] sm:text-xs font-semibold tracking-[0.18em] xs:tracking-[0.2em] sm:tracking-[0.3em] text-[#2ABD00] uppercase shrink-0">
-              WHY QAVYX
-            </span>
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-l from-transparent to-[#2ABD00]/60 shrink" />
-          </div>
-
           <h2
             id="qx-why-heading"
-            className="qx-display text-[19px] xs:text-[25px] sm:text-[31px] lg:text-[2.3rem] font-bold tracking-tight text-white mb-2 leading-tight break-words max-w-full"
+            className="qx-display text-[19px] xs:text-[25px] sm:text-[31px] lg:text-[2.3rem] font-bold tracking-tight text-white leading-tight break-words max-w-full"
           >
             <span>Why Partner With </span>
             <span className="text-[#2ABD00]">
-              QAVYX?
+              Us ?
             </span>
           </h2>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2 gap-y-1 font-mono text-[9.5px] xs:text-[10px] sm:text-xs md:text-sm tracking-wider text-qx-grey/85 uppercase max-w-full">
-            <span className="whitespace-nowrap">RESULTS</span>
-            <span className="text-[#2ABD00]">×</span>
-            <span className="whitespace-nowrap">EXPERTISE</span>
-            <span className="text-[#2ABD00]">×</span>
-            <span className="whitespace-nowrap">SCALABILITY</span>
-          </div>
+          <div className="w-12 sm:w-16 h-[2px] bg-[#2ABD00] rounded-full mx-auto mt-3.5" />
         </div>
 
         {/* 2-Column Composition: Left Character Hero + Right Reasons List */}
@@ -125,19 +110,15 @@ export function WhyQavyx() {
 
                     {/* Card Heading Content (Always visible) */}
                     <div className="relative z-20 flex flex-col justify-center h-full w-full pr-1">
-                      <div className="inline-flex items-center justify-between w-full mb-0.5">
-                        <span className="font-mono text-[8px] xs:text-[8.5px] font-bold tracking-widest text-[#2ABD00] uppercase bg-[#2ABD00]/15 border border-[#2ABD00]/30 px-1 py-0.2 rounded">
-                          0{index + 1}
-                        </span>
+                      <div className="flex items-center justify-between w-full">
+                        <dt className="qx-display font-bold text-[11px] xs:text-xs sm:text-base lg:text-[1.05rem] text-white group-hover:text-[#2ABD00] transition-colors leading-tight tracking-tight">
+                          {reason.label}
+                        </dt>
                         {/* Mobile Expand Indicator Icon */}
-                        <span className="sm:hidden font-mono text-[9px] text-[#2ABD00] transition-transform duration-300">
+                        <span className="sm:hidden font-mono text-[9px] text-[#2ABD00] transition-transform duration-300 shrink-0 ml-1">
                           {isExpanded ? '−' : '+'}
                         </span>
                       </div>
-
-                      <dt className="qx-display font-bold text-[11px] xs:text-xs sm:text-base lg:text-[1.05rem] text-white group-hover:text-[#2ABD00] transition-colors leading-tight tracking-tight">
-                        {reason.label}
-                      </dt>
 
                       {/* Card Content Details - Smooth Animated reveal on hover & tap for mobile */}
                       <div

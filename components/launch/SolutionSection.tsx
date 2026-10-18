@@ -200,31 +200,16 @@ export function SolutionSection() {
 
         {/* Header Section with Responsive Non-clipping Heading */}
         <div className="qx-solution-header text-center mb-4 lg:mb-6 mt-2 sm:mt-4 lg:mt-6 px-2 max-w-full overflow-hidden">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2.5 mb-2 max-w-full">
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-r from-transparent to-[#2ABD00]/60 shrink" />
-            <span className="font-mono text-[9.5px] xs:text-[10px] sm:text-xs font-semibold tracking-[0.18em] xs:tracking-[0.2em] sm:tracking-[0.3em] text-[#2ABD00] uppercase shrink-0">
-              THE SOLUTION
-            </span>
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-l from-transparent to-[#2ABD00]/60 shrink" />
-          </div>
-
           <h2
             id="qx-solution-heading"
-            className="qx-display text-[19px] xs:text-[25px] sm:text-[31px] lg:text-[2.3rem] font-bold tracking-tight text-white mb-2 leading-tight break-words max-w-full"
+            className="qx-display text-[19px] xs:text-[25px] sm:text-[31px] lg:text-[2.3rem] font-bold tracking-tight text-white leading-tight break-words max-w-full"
           >
             <span className="inline-block sm:inline">One Partner.&nbsp;</span>
             <span className="inline-block text-[#2ABD00]">
               Complete Growth.
             </span>
           </h2>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2 gap-y-1 font-mono text-[9.5px] xs:text-[10px] sm:text-xs md:text-sm tracking-wider text-qx-grey/85 uppercase max-w-full">
-            <span className="whitespace-nowrap">STRATEGY</span>
-            <span className="text-[#2ABD00]">×</span>
-            <span className="whitespace-nowrap">EXECUTION</span>
-            <span className="text-[#2ABD00]">×</span>
-            <span className="whitespace-nowrap">AUTOMATION</span>
-          </div>
+          <div className="w-12 sm:w-16 h-[2px] bg-[#2ABD00] rounded-full mx-auto mt-3.5" />
         </div>
 
         {/* Desktop & Tablet 3-Column Balanced 3D Perspective Composition */}
@@ -241,14 +226,6 @@ export function SolutionSection() {
               <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-36 h-36 bg-[#2ABD00]/10 rounded-full blur-xl group-hover:bg-[#2ABD00]/20 transition-all duration-500" />
 
               <div className="relative z-10 flex flex-col justify-center h-full max-w-[56%] lg:max-w-[58%] pr-2">
-                <div className="inline-flex items-center gap-1.5 mb-1">
-                  <span className="font-mono text-[9px] font-bold tracking-widest text-[#2ABD00] uppercase bg-[#2ABD00]/15 border border-[#2ABD00]/30 px-1.5 py-0.5 rounded">
-                    01
-                  </span>
-                  <span className="font-mono text-[9px] font-semibold tracking-wider text-qx-grey/70 uppercase">
-                    QAVYX
-                  </span>
-                </div>
 
                 <h3 className="qx-display font-extrabold text-base lg:text-lg text-white group-hover:text-[#2ABD00] transition-colors leading-tight tracking-tight mb-0.5">
                   STRATEGY
@@ -289,14 +266,6 @@ export function SolutionSection() {
                 <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-36 h-36 bg-[#2ABD00]/10 rounded-full blur-xl group-hover:bg-[#2ABD00]/20 transition-all duration-500" />
 
                 <div className="relative z-10 flex flex-col justify-center h-full max-w-[56%] lg:max-w-[58%] pr-2">
-                  <div className="inline-flex items-center gap-1.5 mb-1">
-                    <span className="font-mono text-[9px] font-bold tracking-widest text-[#2ABD00] uppercase bg-[#2ABD00]/15 border border-[#2ABD00]/30 px-1.5 py-0.5 rounded">
-                      03
-                    </span>
-                    <span className="font-mono text-[9px] font-semibold tracking-wider text-qx-grey/70 uppercase">
-                      QAVYX
-                    </span>
-                  </div>
 
                   <h3 className="qx-display font-extrabold text-base lg:text-lg text-white group-hover:text-[#2ABD00] transition-colors leading-tight tracking-tight mb-0.5">
                     AUTOMATION
@@ -359,14 +328,6 @@ export function SolutionSection() {
                 <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-36 h-36 bg-[#2ABD00]/10 rounded-full blur-xl group-hover:bg-[#2ABD00]/20 transition-all duration-500" />
 
                 <div className="relative z-10 flex flex-col justify-center h-full max-w-[56%] lg:max-w-[58%] pr-2">
-                  <div className="inline-flex items-center gap-1.5 mb-1">
-                    <span className="font-mono text-[9px] font-bold tracking-widest text-[#2ABD00] uppercase bg-[#2ABD00]/15 border border-[#2ABD00]/30 px-1.5 py-0.5 rounded">
-                      02
-                    </span>
-                    <span className="font-mono text-[9px] font-semibold tracking-wider text-qx-grey/70 uppercase">
-                      QAVYX
-                    </span>
-                  </div>
 
                   <h3 className="qx-display font-extrabold text-base lg:text-lg text-white group-hover:text-[#2ABD00] transition-colors leading-tight tracking-tight mb-0.5">
                     EXECUTION
@@ -407,14 +368,6 @@ export function SolutionSection() {
                 <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-36 h-36 bg-[#2ABD00]/10 rounded-full blur-xl group-hover:bg-[#2ABD00]/20 transition-all duration-500" />
 
                 <div className="relative z-10 flex flex-col justify-center h-full max-w-[56%] lg:max-w-[58%] pr-2">
-                  <div className="inline-flex items-center gap-1.5 mb-1">
-                    <span className="font-mono text-[9px] font-bold tracking-widest text-[#2ABD00] uppercase bg-[#2ABD00]/15 border border-[#2ABD00]/30 px-1.5 py-0.5 rounded">
-                      04
-                    </span>
-                    <span className="font-mono text-[9px] font-semibold tracking-wider text-qx-grey/70 uppercase">
-                      QAVYX
-                    </span>
-                  </div>
 
                   <h3 className="qx-display font-extrabold text-base lg:text-lg text-white group-hover:text-[#2ABD00] transition-colors leading-tight tracking-tight mb-0.5">
                     GROWTH
@@ -492,14 +445,6 @@ export function SolutionSection() {
                   {/* Left Text Content & Pills */}
                   <div className="relative z-10 flex flex-col justify-between h-full py-0.5 max-w-[60%] sm:max-w-[62%] pr-1.5 shrink-0">
                     <div>
-                      <div className="inline-flex items-center gap-1 mb-0.5">
-                        <span className="font-mono text-[8px] xs:text-[8.5px] font-bold tracking-widest text-[#2ABD00] uppercase bg-[#2ABD00]/20 border border-[#2ABD00]/40 px-1 py-0.2 rounded">
-                          {card.badge}
-                        </span>
-                        <span className="font-mono text-[8px] xs:text-[8.5px] font-semibold tracking-wider text-qx-grey/75 uppercase">
-                          QAVYX
-                        </span>
-                      </div>
 
                       <h3 className="qx-display font-extrabold text-sm xs:text-base sm:text-lg text-white leading-tight tracking-tight group-hover:text-[#2ABD00] transition-colors">
                         {card.title}

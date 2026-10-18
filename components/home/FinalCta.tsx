@@ -30,16 +30,7 @@ export function FinalCta() {
         {/* ================= CENTERED COPY & CTA ================= */}
         <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto">
           
-          {/* Category Pill Badge */}
-          <div
-            data-rv
-            className="mb-2 sm:mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#2ABD00]/30 bg-[#06180a]/90 px-3 py-0.5 shadow-[0_0_8px_rgba(42,189,0,0.15)] backdrop-blur-md"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[#2ABD00] shadow-[0_0_5px_#2ABD00]" />
-            <span className="font-mono text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-[#2ABD00] uppercase">
-              LET&apos;S BUILD TOGETHER
-            </span>
-          </div>
+
 
           {/* Main Headline */}
           <h2

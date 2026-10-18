@@ -165,7 +165,7 @@ export function SiteIndex() {
                 id="qx-index-heading"
                 className="font-mono text-[11px] sm:text-xs font-bold tracking-[0.28em] text-[#2ABD00] uppercase"
               >
-                WHAT&apos;S INSIDE QAVYX
+                WHAT&apos;S INSIDE US
               </span>
             </div>
 
@@ -211,25 +211,7 @@ export function SiteIndex() {
               </span>
             </div>
 
-            {/* CTA Button - Exact Footer "Chat With Us" Button Model & Styling */}
-            <div data-rv style={stagger(4)} className="mb-6 lg:mb-0">
-              <Link
-                href="/services"
-                prefetch={true}
-                className="group inline-flex items-center gap-2.5 rounded-sm border border-[#2ABD00]/60 bg-transparent px-4 sm:px-5 py-2 font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#2ABD00] transition-all duration-300 hover:border-[#2ABD00] hover:bg-[#2ABD00]/10 hover:shadow-[0_0_12px_rgba(42,189,0,0.3)]"
-              >
-                <span>EXPLORE FEATURES</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-3.5 h-3.5 stroke-current fill-none stroke-[2.2] transition-transform duration-300 group-hover:translate-x-1"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </Link>
-            </div>
+
 
           </div>
 
@@ -283,13 +265,6 @@ export function SiteIndex() {
 
                           {/* Card Info */}
                           <div className="flex flex-col min-w-0 justify-center">
-                            <span
-                              className={`font-mono text-[8.5px] sm:text-[9.5px] font-bold tracking-wider mb-0.5 transition-colors ${
-                                isActive ? 'text-[#2ABD00]' : 'text-[#8E9B92]'
-                              }`}
-                            >
-                              {item.number}
-                            </span>
                             <h3
                               className={`font-display font-bold text-[12.5px] sm:text-[14px] leading-tight truncate transition-colors ${
                                 isActive ? 'text-white' : 'text-white group-hover:text-[#2ABD00]'

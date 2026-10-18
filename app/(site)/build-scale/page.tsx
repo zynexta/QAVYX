@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { PillarPage } from '@/components/pillars/PillarPage';
 import { JsonLd } from '@/components/seo/JsonLd';
+import BuildScaleProcess from '@/components/build/BuildScaleProcess';
 import { pillarBySlug } from '@/content/pillars';
 import { pillarJsonLd, pillarMetadata } from '@/lib/seo';
+import { ANCHOR_SCROLL_BOOT } from '@/lib/anchor-scroll';
 
 /**
  * `/build-scale` — the handoff document's §30–§35.
@@ -18,8 +19,9 @@ export const metadata: Metadata = pillarMetadata(PAGE);
 export default function BuildScaleRoute() {
   return (
     <>
+      <script dangerouslySetInnerHTML={{ __html: ANCHOR_SCROLL_BOOT }} />
       <JsonLd data={pillarJsonLd(PAGE)} />
-      <PillarPage page={PAGE} />
+      <BuildScaleProcess />
     </>
   );
 }

@@ -269,15 +269,9 @@ export function WhoWeServe() {
         {/* =========================================================================
             SECTION HEADER
             ========================================================================= */}
-        <div className="text-center max-w-[54rem] mx-auto mb-6 md:mb-10 relative z-20 px-4">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2.5 mb-2 max-w-full">
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-r from-transparent to-[#2ABD00]/60 shrink" />
-            <span id="qx-serve-heading" className="font-mono text-[9.5px] xs:text-[10px] sm:text-xs font-semibold tracking-[0.18em] xs:tracking-[0.2em] sm:tracking-[0.3em] text-[#2ABD00] uppercase shrink-0">{HOME_COPY.serveHeading}</span>
-            <span className="h-px w-4 xs:w-6 sm:w-8 bg-gradient-to-l from-transparent to-[#2ABD00]/60 shrink" />
-          </div>
-
-          <h2 className="qx-display text-[clamp(1.85rem,5.5vw,2.75rem)] font-bold text-white tracking-tight leading-[1.18]">
-            QAVYX works with
+        <div className="text-center max-w-[54rem] mx-auto mb-2 md:mb-4 relative z-20 px-4">
+          <h2 id="qx-serve-heading" className="qx-display text-[clamp(1.85rem,5.5vw,2.75rem)] font-bold text-white tracking-tight leading-[1.18]">
+            We work with
             <br className="block md:hidden" />{' '}
             <span className="text-[#2ABD00] drop-shadow-[0_0_24px_rgba(42,189,0,0.7)]">
               ambitious businesses
@@ -285,8 +279,8 @@ export function WhoWeServe() {
             <br className="block md:hidden" />{' '}
             across<span className="text-[#2ABD00] drop-shadow-[0_0_10px_#2ABD00]">.</span>
           </h2>
-
-          <p className="mt-3 text-[11px] sm:text-xs font-mono uppercase tracking-[0.2em] sm:tracking-[0.22em] text-[#919A94]">
+          <div className="w-12 sm:w-16 h-[2px] bg-[#2ABD00] rounded-full mx-auto mt-3.5" />
+          <p className="mt-7 md:mt-10 text-[11px] sm:text-xs font-mono uppercase tracking-[0.2em] sm:tracking-[0.22em] text-[#919A94]">
             DIFFERENT INDUSTRIES. A COMMON GOAL — GROWTH.
           </p>
         </div>
@@ -296,7 +290,7 @@ export function WhoWeServe() {
             ========================================================================= */}
         <div
           id="qx-serve-stage"
-          className="relative w-full max-w-full min-w-0 flex flex-col items-center justify-start md:justify-center md:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] z-10 overflow-hidden"
+          className="relative w-full max-w-full min-w-0 flex flex-col items-center justify-start md:justify-center md:min-h-[660px] lg:min-h-[720px] xl:min-h-[760px] md:-mt-8 lg:-mt-14 z-10 overflow-hidden"
         >
           
 
@@ -448,11 +442,11 @@ export function WhoWeServe() {
                   - Front cards (z-50) pass strictly OVER / IN FRONT OF the Earth!
               ========================================================================= */}
           <div className="hidden md:flex absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-[20] items-center justify-center pointer-events-auto">
-            <div className="relative w-48 h-48 md:w-[185px] md:h-[185px] lg:w-[198px] lg:h-[198px] xl:w-[210px] xl:h-[210px] flex items-center justify-center">
+            <div className="relative w-56 h-56 md:w-[225px] md:h-[225px] lg:w-[245px] lg:h-[245px] xl:w-[265px] xl:h-[265px] flex items-center justify-center">
               
               {/* Fiery Green Energy Glow Background Halo */}
               <div
-                className="absolute -inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(42,189,0,0.28)_0%,rgba(26,122,14,0.08)_55%,transparent_75%)] blur-xl pointer-events-none"
+                className="absolute -inset-6 rounded-full bg-[radial-gradient(circle_at_center,rgba(42,189,0,0.32)_0%,rgba(26,122,14,0.1)_55%,transparent_75%)] blur-2xl pointer-events-none"
                 style={{ animation: 'qx-earth-pulse 7s ease-in-out infinite' }}
               />
 
@@ -462,7 +456,7 @@ export function WhoWeServe() {
                 <img
                   src="/who-we-serve-hub/globe-network.webp"
                   alt="QAVYX Planetary Orbital Core"
-                  className="w-full h-full object-contain select-none pointer-events-none filter brightness-105 contrast-110 drop-shadow-[0_0_32px_rgba(42,189,0,0.85)]"
+                  className="w-full h-full object-contain select-none pointer-events-none filter brightness-105 contrast-110 drop-shadow-[0_0_35px_rgba(42,189,0,0.9)]"
                 />
               </div>
 
@@ -470,7 +464,7 @@ export function WhoWeServe() {
               <div className="absolute z-20 flex items-center justify-center pointer-events-none">
                 <NavLogo
                   instance="serve-hub-v5"
-                  className="w-[78px] md:w-[84px] lg:w-[92px] xl:w-[98px] h-auto text-white drop-shadow-[0_0_16px_rgba(42,189,0,0.95)] filter contrast-125"
+                  className="w-[88px] md:w-[98px] lg:w-[108px] xl:w-[118px] h-auto text-white drop-shadow-[0_0_16px_rgba(42,189,0,0.95)] filter contrast-125"
                 />
               </div>
 
@@ -693,14 +687,11 @@ export function WhoWeServe() {
                           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-transparent opacity-60" />
                         </div>
 
-                        {/* Top Row: Monospace Number Badge (Left) + Snug Arrow Badge (Right) */}
+                        {/* Top Row: Snug Arrow Badge (Right) */}
                         <div
-                          className="relative z-10 flex items-center justify-between w-full"
+                          className="relative z-10 flex items-center justify-end w-full"
                           style={{ transform: 'translateZ(14px)' }}
                         >
-                          <span className="font-mono text-xs font-bold text-[#2ABD00] tracking-wider drop-shadow-[0_0_8px_rgba(42,189,0,0.85)]">
-                            {item.number}
-                          </span>
                           {/* Snug 20px Circular Arrow Badge */}
                           <div className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white/90 group-hover:border-[#2ABD00] group-hover:text-[#2ABD00] group-hover:shadow-[0_0_8px_#2ABD00] transition-all">
                             <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -726,22 +717,6 @@ export function WhoWeServe() {
             </ul>
           </div>
 
-          {/* =========================================================================
-              CORNER BRANDING ACCENTS (MATCHING USER REFERENCE IMAGE 2)
-              ========================================================================= */}
-          <div className="hidden lg:flex absolute bottom-2 left-6 z-20 flex-col font-mono text-[9px] uppercase tracking-[0.24em] text-[#919A94]/80 leading-[1.6] select-none pointer-events-none">
-            <span>DIFFERENT</span>
-            <span>BUSINESSES</span>
-            <span>SAME</span>
-            <span className="text-[#2ABD00] font-semibold drop-shadow-[0_0_6px_rgba(42,189,0,0.6)]">GROWTH MINDSET</span>
-          </div>
-
-          <div className="hidden lg:flex absolute bottom-2 right-6 z-20 flex-col items-end text-right font-mono text-[9px] uppercase tracking-[0.24em] text-[#919A94]/80 leading-[1.6] select-none pointer-events-none">
-            <span>IDEAS</span>
-            <span>SOLUTIONS</span>
-            <span>PARTNERSHIPS</span>
-            <span className="text-[#2ABD00] font-semibold drop-shadow-[0_0_6px_rgba(42,189,0,0.6)]">REAL IMPACT</span>
-          </div>
 
         </div>
 

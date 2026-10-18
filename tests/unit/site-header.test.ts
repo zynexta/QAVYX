@@ -104,12 +104,13 @@ describe('the menu panel', () => {
    * The other half — that they are still REACHABLE — is `site-content.test.ts`'s
    * job: `FOOTER_NAV` carries all eleven on every page.
    */
-  it('leaves the five pillars out, and keeps Contact in', () => {
+  it('carries the five pillars and Contact Us, while omitting Our Services', () => {
     for (const pillar of SITE_INDEX.pillars) {
-      expect(items.map((i) => i.href)).not.toContain(pillar.href);
+      expect(items.map((i) => i.href)).toContain(pillar.href);
     }
+    expect(items.map((i) => i.href)).not.toContain('/services');
     expect(items.map((i) => i.href)).toContain(CONTACT_NAV.href);
-    expect(items).toHaveLength(6);
+    expect(items).toHaveLength(10);
   });
 
   /**
