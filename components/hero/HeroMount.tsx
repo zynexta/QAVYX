@@ -15,5 +15,19 @@ const HeroSection = dynamic(
 export function HeroMount() {
   const reduced = useReducedMotion();
   if (reduced !== false) return null;
+
+  if (typeof window !== 'undefined') {
+    try {
+      const isHard = sessionStorage.getItem('qx_hard_refresh') === 'true';
+      const scrolled =
+        sessionStorage.getItem('qx_scrolled_to_problem') === 'true' ||
+        sessionStorage.getItem('qx_scrolled_past_hero') === 'true' ||
+        document.documentElement.hasAttribute('data-qx-restore-problem');
+      if (!isHard && scrolled) {
+        return null;
+      }
+    } catch {}
+  }
+
   return <HeroSection />;
 }

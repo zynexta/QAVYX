@@ -231,12 +231,6 @@ export default function AiAutomationProcess() {
           
           {/* Left Header Copy */}
           <div className="lg:col-span-6 flex flex-col items-start">
-            
-            {/* Pill Eyebrow */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#2ABD00]/30 bg-[#2ABD00]/10 px-3.5 py-1 text-2xs font-mono font-semibold uppercase tracking-[0.25em] text-[#2ABD00] mb-4">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#2ABD00] shadow-[0_0_8px_#2ABD00]" />
-              <span>AI & Automation</span>
-            </div>
 
             {/* Main Headline */}
             <h1 className="qx-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-[3.1rem] font-bold tracking-tight text-white leading-tight mb-3 sm:mb-4">

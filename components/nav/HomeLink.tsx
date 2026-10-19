@@ -14,16 +14,19 @@ interface HomeLinkProps {
  * Kept as a minimal client component so Footer itself stays a server component.
  */
 export function HomeLink({ className, children, suppressHydrationWarning }: HomeLinkProps) {
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     try {
-      sessionStorage.removeItem('qx_scrolled_to_problem');
-      sessionStorage.removeItem('qx_scrolled_past_hero');
-      sessionStorage.removeItem('qx-intro-complete');
-      document.documentElement.removeAttribute('data-qx-restore-problem');
-      document.documentElement.removeAttribute('data-qx-restoring-scroll');
+      sessionStorage.setItem('qx_scrolled_to_problem', 'true');
+      sessionStorage.setItem('qx_scrolled_past_hero', 'true');
     } catch {}
-    if (window.location.pathname === '/') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      e.preventDefault();
+      const target = document.getElementById('the-problem') || document.getElementById('qx-launch-static');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 

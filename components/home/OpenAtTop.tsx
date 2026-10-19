@@ -6,9 +6,14 @@ import { activeLenis, onLenisReady } from '@/motion/lenis';
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 /**
- * Ensures `/` opens hero at top (0,0) on hard refresh or first visit, but whenever
- * user performs a normal refresh after scrolling past hero, positions directly at
- * #the-problem ("Why Growth Feels So Hard?") and re-triggers section entrance animations.
+ * Ensures `/` opens hero at top (0,0) on hard refresh or first visit, but once
+ * the user has scrolled to or past #the-problem ("Why Growth Feels So Hard?"),
+ * the hero animation layer is collapsed permanently for that session:
+ * - User cannot scroll back up into the hero / rocket animations.
+ * - Normal refresh (F5) opens directly at #the-problem with hero hidden.
+ * - Navigating to other pages (footer links, etc.) and pressing Back returns
+ *   directly to #the-problem without replaying hero animations.
+ * - Only a hard refresh (Ctrl+Shift+R, Ctrl+F5) resets to the hero animations.
  */
 export function OpenAtTop() {
   useIsomorphicLayoutEffect(() => {
@@ -67,136 +72,47 @@ export function OpenAtTop() {
       } catch {}
     };
 
-    const getProblemScrollY = (): number | null => {
-      const target =
-        document.getElementById('the-problem') ||
-        document.getElementById('qx-launch-static') ||
-        document.getElementById('qx-trust');
-      if (target) {
-        const rect = target.getBoundingClientRect();
-        return rect.top + window.scrollY;
-      }
-      return null;
-    };
-
-    type ScrollTriggerType = (typeof import('@/motion/gsap'))['ScrollTrigger'];
-    let stRef: ScrollTriggerType | null = null;
-    let cancelled = false;
-
-    const scrollToProblemStart = () => {
-      const targetY = getProblemScrollY();
-      if (targetY !== null && targetY > 0) {
-        if (Math.abs(window.scrollY - targetY) > 1) {
-          window.scrollTo({ top: targetY, behavior: 'instant' as ScrollBehavior });
-        }
-
-        const lenis = activeLenis();
-        if (lenis && Math.abs(lenis.scroll - targetY) > 1) {
-          lenis.scrollTo(targetY, { immediate: true });
-        }
-
-        if (stRef) {
-          try {
-            stRef.update();
-          } catch {}
-        }
-
-        ensureVisibleRevealed();
-        try {
-          document.documentElement.removeAttribute('data-qx-restoring-scroll');
-        } catch {}
-        return true;
-      }
-      return false;
-    };
-    let removeRefreshListener: (() => void) | null = null;
-    let removeLenisListener: (() => void) | null = null;
-    let userScrolled = false;
-
-    const onUserInteraction = () => {
-      userScrolled = true;
+    const collapseHero = (offset: number = 0) => {
       try {
-        document.documentElement.removeAttribute('data-qx-restore-problem');
+        document.documentElement.setAttribute('data-qx-restore-problem', '');
+        document.documentElement.setAttribute('data-qx-nav-defer', '');
+        document.documentElement.setAttribute('data-qx-nav', 'on');
         document.documentElement.removeAttribute('data-qx-restoring-scroll');
+
+        const hero = document.getElementById('qx-hero-reserve');
+        if (hero) hero.style.display = 'none';
+        const film = document.getElementById('qx-rocket-film');
+        if (film) film.style.display = 'none';
+        const staticHero = document.getElementById('qx-hero-static');
+        if (staticHero) staticHero.style.display = 'none';
+        const root = document.getElementById('qx-hero-root');
+        if (root) root.style.display = 'none';
+
+        import('@/motion/gsap').then(({ ScrollTrigger }) => {
+          try {
+            ScrollTrigger.getById('qx-pin')?.kill();
+            ScrollTrigger.refresh();
+          } catch {}
+        }).catch(() => {});
+
+        window.scrollTo({ top: offset, behavior: 'instant' as ScrollBehavior });
+        const lenis = activeLenis();
+        if (lenis) {
+          lenis.scrollTo(offset, { immediate: true });
+        }
+        ensureVisibleRevealed();
       } catch {}
     };
-
-    window.addEventListener('wheel', onUserInteraction, { passive: true, once: true });
-    window.addEventListener('touchstart', onUserInteraction, { passive: true, once: true });
 
     if (!isHardRefresh && !isHardRefreshPressed && scrolledToProblem) {
-      document.documentElement.setAttribute('data-qx-restore-problem', '');
-      document.documentElement.setAttribute('data-qx-restoring-scroll', '');
-      document.documentElement.setAttribute('data-qx-nav-defer', '');
-      document.documentElement.setAttribute('data-qx-nav', 'on');
+      collapseHero(0);
+      setTimeout(() => collapseHero(0), 0);
+      setTimeout(() => collapseHero(0), 50);
 
-      // Run immediate scroll attempt
-      scrollToProblemStart();
-      setTimeout(() => {
-        if (!cancelled && !userScrolled) {
-          scrollToProblemStart();
-        }
-      }, 0);
-
-      import('@/motion/gsap').then(({ ScrollTrigger: st }) => {
-        if (cancelled) return;
-        stRef = st;
-        try {
-          st.update();
-        } catch {}
-
-        const onRefresh = () => {
-          if (!userScrolled) {
-            const targetY = getProblemScrollY();
-            if (targetY !== null && Math.abs(window.scrollY - targetY) > 1) {
-              scrollToProblemStart();
-            }
-          }
-        };
-
-        try {
-          st.addEventListener('refresh', onRefresh);
-          removeRefreshListener = () => {
-            try {
-              st.removeEventListener('refresh', onRefresh);
-            } catch {}
-          };
-        } catch {}
-
-        setTimeout(() => {
-          if (!cancelled) {
-            try {
-              document.documentElement.removeAttribute('data-qx-restore-problem');
-              document.documentElement.removeAttribute('data-qx-restoring-scroll');
-            } catch {}
-          }
-        }, 150);
-      }).catch(() => {});
-
-      try {
-        removeLenisListener = onLenisReady((lenis) => {
-          if (!userScrolled) {
-            const targetY = getProblemScrollY();
-            if (targetY !== null && targetY > 0 && Math.abs(lenis.scroll - targetY) > 1) {
-              lenis.scrollTo(targetY, { immediate: true });
-            }
-          }
-        });
-      } catch {}
-
-      window.addEventListener('load', () => {
-        if (!userScrolled) {
-          const targetY = getProblemScrollY();
-          if (targetY !== null && Math.abs(window.scrollY - targetY) > 1) {
-            scrollToProblemStart();
-          }
-        }
-      }, { once: true });
+      window.addEventListener('load', () => collapseHero(0), { once: true });
     } else {
       window.scrollTo(0, 0);
       try {
-        sessionStorage.removeItem('qx_scrolled_to_problem');
-        sessionStorage.removeItem('qx_scrolled_past_hero');
         document.documentElement.removeAttribute('data-qx-restore-problem');
         document.documentElement.removeAttribute('data-qx-restoring-scroll');
       } catch {}
@@ -204,45 +120,57 @@ export function OpenAtTop() {
 
     const handlePopState = () => {
       try {
+        const isHard = sessionStorage.getItem('qx_hard_refresh') === 'true';
         const scrolled =
           sessionStorage.getItem('qx_scrolled_to_problem') === 'true' ||
           sessionStorage.getItem('qx_scrolled_past_hero') === 'true';
-        if (scrolled) {
-          document.documentElement.setAttribute('data-qx-restore-problem', '');
-          document.documentElement.setAttribute('data-qx-restoring-scroll', '');
-          document.documentElement.setAttribute('data-qx-nav-defer', '');
-          document.documentElement.setAttribute('data-qx-nav', 'on');
-          scrollToProblemStart();
+        if (!isHard && scrolled) {
+          collapseHero(0);
         }
       } catch {}
     };
     window.addEventListener('popstate', handlePopState, { passive: true });
 
+    let isHeroCollapsed = !isHardRefresh && !isHardRefreshPressed && scrolledToProblem;
+
     const handleScroll = () => {
-      const currentY = window.scrollY;
-      const target = document.getElementById('the-problem');
-      if (target) {
-        const rect = target.getBoundingClientRect();
-        if (rect.top <= window.innerHeight * 0.5) {
-          try {
-            sessionStorage.setItem('qx_scrolled_to_problem', 'true');
-            sessionStorage.setItem('qx_scrolled_past_hero', 'true');
-          } catch {}
-        } else if (rect.top > 50 || currentY < 200) {
-          try {
-            sessionStorage.removeItem('qx_scrolled_to_problem');
-            sessionStorage.removeItem('qx_scrolled_past_hero');
-            document.documentElement.removeAttribute('data-qx-restore-problem');
-            document.documentElement.removeAttribute('data-qx-restoring-scroll');
-          } catch {}
-        }
-      } else if (currentY < 200) {
+      const target = document.getElementById('the-problem') || document.getElementById('qx-launch-static');
+      if (!target) return;
+
+      const rect = target.getBoundingClientRect();
+
+      // Once #the-problem comes within view, save to sessionStorage permanently for this session
+      if (rect.top <= window.innerHeight * 0.75) {
         try {
-          sessionStorage.removeItem('qx_scrolled_to_problem');
-          sessionStorage.removeItem('qx_scrolled_past_hero');
-          document.documentElement.removeAttribute('data-qx-restore-problem');
-          document.documentElement.removeAttribute('data-qx-restoring-scroll');
+          sessionStorage.setItem('qx_scrolled_to_problem', 'true');
+          sessionStorage.setItem('qx_scrolled_past_hero', 'true');
         } catch {}
+      }
+
+      // When #the-problem reaches the top of the viewport during first visit:
+      if (!isHeroCollapsed) {
+        if (rect.top <= 10) {
+          isHeroCollapsed = true;
+          const currentY = window.scrollY;
+          const problemTop = rect.top + currentY;
+          const offsetIntoProblem = Math.max(0, currentY - problemTop);
+          collapseHero(offsetIntoProblem);
+        } else {
+          // If user already entered problem section but tries to scroll up into the rocket/hero:
+          const isMarked =
+            sessionStorage.getItem('qx_scrolled_to_problem') === 'true' ||
+            sessionStorage.getItem('qx_scrolled_past_hero') === 'true';
+          if (isMarked) {
+            const currentY = window.scrollY;
+            const problemTop = rect.top + currentY;
+            // Prevent scrolling back up into the hero animations:
+            if (currentY < problemTop - 100) {
+              window.scrollTo({ top: problemTop, behavior: 'instant' as ScrollBehavior });
+              const lenis = activeLenis();
+              if (lenis) lenis.scrollTo(problemTop, { immediate: true });
+            }
+          }
+        }
       }
     };
 
@@ -250,12 +178,7 @@ export function OpenAtTop() {
     handleScroll();
 
     return () => {
-      cancelled = true;
-      if (removeRefreshListener) removeRefreshListener();
-      if (removeLenisListener) removeLenisListener();
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
-      window.removeEventListener('wheel', onUserInteraction);
-      window.removeEventListener('touchstart', onUserInteraction);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('popstate', handlePopState);
       if (prevScrollRestoration && typeof window !== 'undefined' && 'scrollRestoration' in window.history) {

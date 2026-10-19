@@ -58,33 +58,22 @@ export function SmoothScroll() {
               window.history.scrollRestoration = 'manual';
             }
             document.documentElement.setAttribute('data-qx-restore-problem', '');
-            document.documentElement.setAttribute('data-qx-restoring-scroll', '');
             document.documentElement.setAttribute('data-qx-nav-defer', '');
             document.documentElement.setAttribute('data-qx-nav', 'on');
+            document.documentElement.removeAttribute('data-qx-restoring-scroll');
 
-            const alignToProblem = () => {
-              const el =
-                document.getElementById('the-problem') ||
-                document.getElementById('qx-launch-static') ||
-                document.getElementById('qx-trust');
-              if (el) {
-                const y = el.getBoundingClientRect().top + window.scrollY;
-                if (y > 0 && Math.abs(window.scrollY - y) > 1) {
-                  window.scrollTo({ top: y, behavior: 'instant' as ScrollBehavior });
-                }
-                const l = activeLenis();
-                if (l && Math.abs(l.scroll - y) > 1) {
-                  l.scrollTo(y, { immediate: true });
-                }
-                return true;
-              }
-              return false;
-            };
+            const hero = document.getElementById('qx-hero-reserve');
+            if (hero) hero.style.display = 'none';
+            const film = document.getElementById('qx-rocket-film');
+            if (film) film.style.display = 'none';
+            const staticHero = document.getElementById('qx-hero-static');
+            if (staticHero) staticHero.style.display = 'none';
+            const root = document.getElementById('qx-hero-root');
+            if (root) root.style.display = 'none';
 
-            alignToProblem();
-            setTimeout(alignToProblem, 0);
-            setTimeout(alignToProblem, 50);
-            setTimeout(alignToProblem, 150);
+            window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+            const l = activeLenis();
+            if (l) l.scrollTo(0, { immediate: true });
           }
         }
       } catch {}

@@ -128,16 +128,14 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
               <button
                 type="button"
                 onClick={() => {
-                  try {
-                    sessionStorage.removeItem('qx_scrolled_to_problem');
-                    sessionStorage.removeItem('qx_scrolled_past_hero');
-                    sessionStorage.removeItem('qx-intro-complete');
-                    sessionStorage.setItem('qx_hard_refresh', 'true');
-                  } catch {}
-                  window.scrollTo(0, 0);
-                  window.location.reload();
+                  const target = document.getElementById('the-problem') || document.getElementById('qx-launch-static');
+                  if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
                 }}
-                aria-label={`${ORGANISATION.name} home - replay hero`}
+                aria-label={`${ORGANISATION.name} home`}
                 className="text-qx-white transition-opacity hover:opacity-80 cursor-pointer bg-transparent border-none p-0 text-left shrink-0"
               >
                 <NavLogo instance="header" className="w-[87px] sm:w-[103px] md:w-[118px]" />
@@ -145,14 +143,6 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
             ) : (
               <Link
                 href="/"
-                onClick={() => {
-                  try {
-                    sessionStorage.removeItem('qx_scrolled_to_problem');
-                    sessionStorage.removeItem('qx_scrolled_past_hero');
-                    sessionStorage.removeItem('qx-intro-complete');
-                    sessionStorage.setItem('qx_hard_refresh', 'true');
-                  } catch {}
-                }}
                 aria-label={`${ORGANISATION.name} home`}
                 className="text-qx-white transition-opacity hover:opacity-80 shrink-0"
               >

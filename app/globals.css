@@ -249,24 +249,29 @@
      mobile URL bar collapsing must not resize this. It is the same height
      `#qx-hero` itself carries (`h-svh`), which is what makes the swap seamless —
      the reservation is not an approximation of the hero, it is its measurement. */
-  /* When restoring scroll directly to #the-problem on reload, reserve the exact
-     pin-spacer height (100svh hero element + 1015vh scroll pin budget = calc(100svh + 1015vh))
-     immediately on frame 1 before GSAP hydrates so #the-problem is in its exact
-     final document coordinates with zero layout shift or rocket flash. */
-  html[data-qx-restore-problem]:not([data-qx-hero='live']) #qx-hero-reserve {
-    height: calc(100svh + 1015vh) !important;
-    min-height: calc(100svh + 1015vh) !important;
-  }
-  html[data-qx-restore-problem]:not([data-qx-hero='live']) #qx-hero-static {
+  /* When restoring scroll directly to #the-problem on reload or back-navigation,
+     collapse the hero section and rocket film completely so #the-problem sits cleanly
+     at the very top of the page without any dead spacer or scroll-up to hero animations. */
+  html[data-qx-restore-problem] #qx-hero-reserve,
+  html[data-qx-restore-problem] #qx-rocket-film,
+  html[data-qx-restore-problem] #qx-hero-static,
+  html[data-qx-restore-problem] #qx-hero-root {
     display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
-  html[data-qx-restore-problem]:not([data-qx-hero='live']) .qx-header--deferred {
-    position: fixed !important;
+  html[data-qx-restore-problem] .qx-header--deferred {
+    position: sticky !important;
     inset-inline: 0 !important;
     top: 0 !important;
     transform: translate3d(0, 0, 0) !important;
     visibility: visible !important;
     transition: none !important;
+    z-index: 50 !important;
   }
 
   html[data-qx-hero-boot]:not([data-qx-hero-slow]):not([data-qx-hero='live'])
