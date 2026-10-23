@@ -54,14 +54,14 @@ export function TeamSection() {
       className="relative w-full py-12 sm:py-16 md:py-20 bg-black select-none overflow-hidden"
     >
       <div className="mx-auto max-w-[var(--qx-shell)] px-3 sm:px-6">
-        {/* Header: Our Team */}
-        <div className="mb-10 sm:mb-14 text-left">
-          <h2
+        {/* Header: Meet the Team (small gray mono text matching the upper section) */}
+        <div className="mb-8 sm:mb-10 text-left">
+          <p
             id="qx-team-heading"
-            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-sans"
+            className="font-mono text-2xs uppercase tracking-[0.28em] text-[#919A94]"
           >
-            Our <span className="text-[#2ABD00]">Team</span>
-          </h2>
+            Meet the Team
+          </p>
         </div>
 
         {/* 5 Cards in a Single Row matching the reference */}

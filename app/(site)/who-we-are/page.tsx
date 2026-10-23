@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
-import { EYEBROW, InnerPage, Section } from '@/components/inner/InnerPage';
+import { EYEBROW, InnerPage } from '@/components/inner/InnerPage';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { GrowthTeamVisual } from '@/components/services/visuals';
 import { TeamSection } from '@/components/company/TeamSection';
 import {
   ABOUT,
   MISSION,
-  TEAM,
-  TEAM_HEADING,
   VISION,
   WHO_WE_ARE,
 } from '@/content/company';
@@ -179,65 +177,33 @@ export default function WhoWeAreRoute() {
             either, because it is the placeholder a visitor is least able to
             detect and most likely to have made a decision on. Names, roles,
             bios, stock photographs and silhouettes are all the same mistake. */}
-        <Section id="qx-team" label={TEAM_HEADING}>
-          <p className="mt-4 max-w-[46ch] text-md text-qx-white">{TEAM.heading}</p>
-          <p className="mt-2 max-w-[52ch] text-sm text-qx-grey">{TEAM.description}</p>
-          {/*
-            THE PROFILE GRID — commented out because no profiles have been
-            supplied. It is written against §50's own suggested fields
-            (`TEAM_PROFILE_FIELDS` in `content/company.ts`), so real profiles
-            drop into it without a redesign. Uncomment it and fill
-            `TEAM.profiles` in the same commit; `tests/unit/company-content.test.ts`
-            fails if the second happens without the first.
+        {/*
+          THE PROFILE GRID — commented out because no profiles have been
+          supplied. It is written against §50's own suggested fields
+          (`TEAM_PROFILE_FIELDS` in `content/company.ts`), so real profiles
+          drop into it without a redesign. Uncomment it and fill
+          `TEAM.profiles` in the same commit; `tests/unit/company-content.test.ts`
+          fails if the second happens without the first.
 
-            <ul className="mt-6 grid gap-6 border-t border-qx-line pt-6 sm:grid-cols-2 lg:grid-cols-3">
-              {TEAM.profiles.map((profile) => (
-                <li key={profile.name} className="flex flex-col gap-3">
-                  <Image
-                    src={profile.image}
-                    alt=""
-                    width={480}
-                    height={480}
-                    className="aspect-square w-full rounded-sm border border-qx-line object-cover"
-                  />
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-lg text-qx-white">{profile.name}</h3>
-                    <p className={EYEBROW}>{profile.role}</p>
-                  </div>
-                  <p className="max-w-[42ch] text-sm text-qx-grey">{profile.bio}</p>
-                  {profile.linkedin || profile.links?.length ? (
-                    <ul className="flex flex-wrap gap-4">
-                      {profile.linkedin ? (
-                        <li>
-                          <a
-                            href={profile.linkedin}
-                            target="_blank"
-                            rel="noopener"
-                            className="font-mono text-2xs uppercase tracking-[0.28em] text-qx-grey transition-colors hover:text-qx-white"
-                          >
-                            LinkedIn
-                          </a>
-                        </li>
-                      ) : null}
-                      {profile.links?.map((link) => (
-                        <li key={link.href}>
-                          <a
-                            href={link.href}
-                            target="_blank"
-                            rel="noopener"
-                            className="font-mono text-2xs uppercase tracking-[0.28em] text-qx-grey transition-colors hover:text-qx-white"
-                          >
-                            {link.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          */}
-        </Section>
+          <ul className="mt-6 grid gap-6 border-t border-qx-line pt-6 sm:grid-cols-2 lg:grid-cols-3">
+            {TEAM.profiles.map((profile) => (
+              <li key={profile.name} className="flex flex-col gap-3">
+                <Image
+                  src={profile.image}
+                  alt=""
+                  width={480}
+                  height={480}
+                  className="aspect-square w-full rounded-sm border border-qx-line object-cover"
+                />
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-lg text-qx-white">{profile.name}</h3>
+                  <p className={EYEBROW}>{profile.role}</p>
+                </div>
+                <p className="max-w-[42ch] text-sm text-qx-grey">{profile.bio}</p>
+              </li>
+            ))}
+          </ul>
+        */}
       </InnerPage>
 
       {/* Dynamic 3D Team Member Showcase Carousel */}
