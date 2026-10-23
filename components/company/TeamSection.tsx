@@ -6,8 +6,6 @@ export interface TeamMember {
   role: string;
   email: string;
   image: string;
-  borderRadius: string;
-  blobGradient: string;
 }
 
 export const TEAM_MEMBERS: TeamMember[] = [
@@ -17,8 +15,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Founder & CEO',
     email: 'zack@qavyx.com',
     image: '/images/afnan.webp',
-    borderRadius: '62% 38% 42% 58% / 54% 35% 65% 46%',
-    blobGradient: 'from-[#2ABD00] via-[#1a7a0e] to-[#0c3806]',
   },
   {
     id: '2',
@@ -26,8 +22,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Head of Growth Marketing',
     email: 'will@qavyx.com',
     image: '/images/shaheed.webp',
-    borderRadius: '45% 55% 62% 38% / 40% 60% 40% 60%',
-    blobGradient: 'from-[#23a200] via-[#16680d] to-[#092a05]',
   },
   {
     id: '3',
@@ -35,8 +29,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Partner & Strategy Lead',
     email: 'arlton@qavyx.com',
     image: '/images/hashir.webp',
-    borderRadius: '58% 42% 36% 64% / 65% 45% 55% 35%',
-    blobGradient: 'from-[#2ABD00] via-[#1a7a0e] to-[#0d3f07]',
   },
   {
     id: '4',
@@ -44,8 +36,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Creative & Design Director',
     email: 'calvin@qavyx.com',
     image: '/images/shijil.webp',
-    borderRadius: '40% 60% 55% 45% / 48% 58% 42% 52%',
-    blobGradient: 'from-[#28b300] via-[#18720e] to-[#0a2e05]',
   },
   {
     id: '5',
@@ -53,8 +43,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Performance & Media Lead',
     email: 'marcus@qavyx.com',
     image: '/images/anas.webp',
-    borderRadius: '52% 48% 65% 35% / 42% 55% 45% 58%',
-    blobGradient: 'from-[#2ABD00] via-[#1a7a0e] to-[#0c3806]',
   },
 ];
 
@@ -63,16 +51,10 @@ export function TeamSection() {
     <section
       id="qx-team-showcase"
       aria-labelledby="qx-team-heading"
-      className="relative w-full py-10 sm:py-14 md:py-18 select-none overflow-hidden"
+      className="relative w-full py-10 sm:py-14 md:py-18 bg-black select-none overflow-hidden"
     >
-      {/* Background Ambient Glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#2ABD00]/[0.03] blur-[150px] rounded-full"
-      />
-
       <div className="mx-auto max-w-[var(--qx-shell)] px-3 sm:px-6">
-        {/* Header: Our Team with green accent, no 'WHO WE ARE' tag */}
+        {/* Header: Our Team with #2ABD00 highlight */}
         <div className="mb-10 sm:mb-14 text-left">
           <h2
             id="qx-team-heading"
@@ -83,35 +65,32 @@ export function TeamSection() {
         </div>
 
         {/* 5-Column Responsive Grid matching reference */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-6 sm:gap-x-8 lg:gap-x-6 justify-items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-4 sm:gap-x-6 lg:gap-x-4 justify-items-center">
           {TEAM_MEMBERS.map((member) => (
             <div
               key={member.id}
-              className="group flex flex-col items-center text-center w-full max-w-[190px]"
+              className="group flex flex-col items-center text-center w-full max-w-[200px]"
             >
-              {/* Photo with Organic Green Blob Background */}
-              <div className="relative w-[140px] h-[165px] xs:w-[155px] xs:h-[185px] sm:w-[170px] sm:h-[200px] flex items-end justify-center mb-3.5">
-                {/* Organic Green Fluid Blob */}
+              {/* Photo Area with Circular Green Glowing Aura behind */}
+              <div className="relative w-full h-[210px] sm:h-[230px] flex items-end justify-center mb-4">
+                {/* Green Glowing Circle Accent peeking out from the sides */}
                 <div
                   aria-hidden="true"
-                  className={`absolute inset-x-2 top-3 bottom-2 bg-gradient-to-br ${member.blobGradient} transition-all duration-500 group-hover:scale-105 group-hover:rotate-2 shadow-[0_0_26px_rgba(42,189,0,0.32)]`}
-                  style={{
-                    borderRadius: member.borderRadius,
-                  }}
+                  className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160px] h-[160px] sm:w-[175px] sm:h-[175px] rounded-full bg-gradient-to-r from-[#2ABD00] via-[#1a7a0e] to-[#0c3806] shadow-[0_0_35px_rgba(42,189,0,0.35)] transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_45px_rgba(42,189,0,0.55)]"
                 />
 
-                {/* Team Member Cutout Photo (Transparent WebP with monochrome-to-color hover) */}
+                {/* Team Member Photo (Seamless Black Background) */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={member.image}
                   alt={member.name}
-                  className="relative z-10 w-full h-full object-contain object-bottom grayscale contrast-115 group-hover:grayscale-0 transition-all duration-300 drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)]"
+                  className="relative z-10 w-[140px] sm:w-[155px] h-full object-contain object-bottom transition-transform duration-300 group-hover:scale-[1.02]"
                   loading="eager"
                 />
               </div>
 
-              {/* Digital Marketing Agency Role */}
-              <p className="text-[11px] sm:text-xs font-sans text-[#919A94] mb-0.5 leading-tight">
+              {/* Role */}
+              <p className="text-[11px] sm:text-xs font-sans text-[#919A94] mb-1 leading-tight">
                 {member.role}
               </p>
 
