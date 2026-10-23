@@ -182,6 +182,7 @@ export const MENU_NAV: readonly NavItem[] = [
   { href: '/who-we-are', label: 'Who We Are' },
   { href: '/projects', label: 'Our Projects' },
   ...SITE_INDEX.pillars,
+  { href: '/launchpad', label: 'Launchpad' },
   { href: '/faq', label: 'FAQ' },
   CONTACT_NAV,
 ] as const;

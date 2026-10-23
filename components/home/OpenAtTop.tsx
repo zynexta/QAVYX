@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect } from 'react';
-import { activeLenis, onLenisReady } from '@/motion/lenis';
+import { activeLenis } from '@/motion/lenis';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -50,7 +50,6 @@ export function OpenAtTop() {
     try {
       if (sessionStorage.getItem('qx_hard_refresh') === 'true') {
         isHardRefresh = true;
-        sessionStorage.removeItem('qx_hard_refresh');
       }
       if (
         sessionStorage.getItem('qx_scrolled_to_problem') === 'true' ||
@@ -111,11 +110,26 @@ export function OpenAtTop() {
 
       window.addEventListener('load', () => collapseHero(0), { once: true });
     } else {
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      const lenis = activeLenis();
+      if (lenis) lenis.scrollTo(0, { immediate: true });
       try {
         document.documentElement.removeAttribute('data-qx-restore-problem');
         document.documentElement.removeAttribute('data-qx-restoring-scroll');
+        const hero = document.getElementById('qx-hero-reserve');
+        if (hero) hero.style.display = '';
+        const film = document.getElementById('qx-rocket-film');
+        if (film) film.style.display = '';
+        const staticHero = document.getElementById('qx-hero-static');
+        if (staticHero) staticHero.style.display = '';
+        const root = document.getElementById('qx-hero-root');
+        if (root) root.style.display = '';
       } catch {}
+      setTimeout(() => {
+        try {
+          sessionStorage.removeItem('qx_hard_refresh');
+        } catch {}
+      }, 1000);
     }
 
     const handlePopState = () => {

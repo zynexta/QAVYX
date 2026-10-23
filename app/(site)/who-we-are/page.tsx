@@ -2,14 +2,13 @@ import type { Metadata } from 'next';
 import { EYEBROW, InnerPage, Section } from '@/components/inner/InnerPage';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { GrowthTeamVisual } from '@/components/services/visuals';
+import { TeamSection } from '@/components/company/TeamSection';
 import {
   ABOUT,
   MISSION,
   TEAM,
   TEAM_HEADING,
   VISION,
-  WHY_CHOOSE,
-  WHY_CHOOSE_HEADING,
   WHO_WE_ARE,
 } from '@/content/company';
 import { reveal, stagger } from '@/lib/reveal';
@@ -155,37 +154,7 @@ export default function WhoWeAreRoute() {
           ))}
         </div>
 
-        {/* §49 is the same object as the homepage's "Why QAVYX" — a set of
-            short claims, each with one sentence explaining it — and the two were
-            drawn two different ways. `WhyQavyx` gives each reason a card frame in
-            two columns; this gave each a full-width row separated by a hairline,
-            which is the idiom the whole site moved off when the frame system
-            went in. A visitor reading the homepage and then this page read two
-            designs for one thing.
 
-            TWO COLUMNS, not three, for the reason recorded in `WhyQavyx`: a grid
-            row is as tall as its tallest cell whether or not you can see the
-            cell, and "Built for Startups & Growing Businesses" sets three lines
-            in a narrow column while the rest set one. Drawing the cell is what
-            makes that visible.
-
-            It stays a `<ul>` of `<h3>`s rather than becoming the `<dl>` the
-            homepage uses: `phase8d-routes.spec.ts` counts one `<h3>` per reason
-            on this route, and §49's five ARE section headings here in a way the
-            homepage's six are not — they sit under a real `<h2>`. */}
-        <Section id="qx-why-choose" label={WHY_CHOOSE_HEADING}>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-            {WHY_CHOOSE.map((reason) => (
-              <li
-                key={reason.label}
-                className="qx-frame qx-frame--card flex flex-col gap-2 p-4"
-              >
-                <h3 className="text-lg text-qx-white">{reason.label}</h3>
-                <p className="max-w-[42ch] text-sm text-qx-grey">{reason.body}</p>
-              </li>
-            ))}
-          </ul>
-        </Section>
 
         {/* §50 MEET THE TEAM — a section here, and a page of its own until the
             client said it belongs on the about page.
@@ -270,6 +239,9 @@ export default function WhoWeAreRoute() {
           */}
         </Section>
       </InnerPage>
+
+      {/* Dynamic 3D Team Member Showcase Carousel */}
+      <TeamSection />
     </>
   );
 }

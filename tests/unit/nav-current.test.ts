@@ -95,8 +95,8 @@ describe('the current page in both navigations', () => {
    * only the footer carries `/launchpad`, and the menu must light nothing rather
    * than fall back to its own nearest entry.
    */
-  it('does not light Launch on /launchpad, and lights it only where it exists', () => {
-    expect(go('/launchpad')).toEqual({ menu: [], footer: ['/launchpad'] });
+  it('does not light Launch on /launchpad, and lights launchpad in both navigations', () => {
+    expect(go('/launchpad')).toEqual({ menu: ['/launchpad'], footer: ['/launchpad'] });
   });
 
   /**

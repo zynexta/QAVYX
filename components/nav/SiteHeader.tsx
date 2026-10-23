@@ -111,6 +111,29 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
   const pathname = usePathname();
   const isGcc = pathname === '/gcc';
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      sessionStorage.removeItem('qx_scrolled_to_problem');
+      sessionStorage.removeItem('qx_scrolled_past_hero');
+      sessionStorage.removeItem('qx-intro-complete');
+      sessionStorage.setItem('qx_hard_refresh', 'true');
+      document.documentElement.removeAttribute('data-qx-restore-problem');
+      document.documentElement.removeAttribute('data-qx-restoring-scroll');
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+    } catch {}
+
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.location.reload();
+    } else {
+      window.location.href = '/';
+    }
+  };
+
   return (
     <>
       {/* THE SENTINEL IS THE HEADER'S POSITION IN FLOW. */}
@@ -127,15 +150,8 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
             {deferred ? (
               <button
                 type="button"
-                onClick={() => {
-                  const target = document.getElementById('the-problem') || document.getElementById('qx-launch-static');
-                  if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                  } else {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }
-                }}
-                aria-label={`${ORGANISATION.name} home`}
+                onClick={handleLogoClick}
+                aria-label={`${ORGANISATION.name} home - replay hero`}
                 className="text-qx-white transition-opacity hover:opacity-80 cursor-pointer bg-transparent border-none p-0 text-left shrink-0"
               >
                 <NavLogo instance="header" className="w-[87px] sm:w-[103px] md:w-[118px]" />
@@ -143,8 +159,9 @@ export function SiteHeader({ deferred = false }: { deferred?: boolean }) {
             ) : (
               <Link
                 href="/"
+                onClick={handleLogoClick}
                 aria-label={`${ORGANISATION.name} home`}
-                className="text-qx-white transition-opacity hover:opacity-80 shrink-0"
+                className="text-qx-white transition-opacity hover:opacity-80 shrink-0 cursor-pointer"
               >
                 <NavLogo instance="header" className="w-[87px] sm:w-[103px] md:w-[118px]" />
               </Link>

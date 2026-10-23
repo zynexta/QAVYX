@@ -109,10 +109,12 @@ export default function CampaignProcess() {
 
   const updateTimelinePath = useCallback(() => {
     if (!containerRef.current) return;
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setSvgPath('');
+      return;
+    }
     const containerRect = containerRef.current.getBoundingClientRect();
     if (containerRect.width === 0 || containerRect.height === 0) return;
-
-    const isMobile = window.innerWidth < 768;
 
     const badgeCenters: { x: number; y: number }[] = [];
     const cardBounds: { left: number; right: number; top: number; bottom: number }[] = [];
@@ -136,18 +138,6 @@ export default function CampaignProcess() {
         top: cRect.top - containerRect.top,
         bottom: cRect.bottom - containerRect.top,
       });
-    }
-
-    if (isMobile) {
-      const parts: string[] = [];
-      for (let i = 0; i < badgeCenters.length; i++) {
-        const badge = badgeCenters[i];
-        if (!badge) continue;
-        if (i === 0) parts.push(`M ${badge.x} ${badge.y}`);
-        else parts.push(`L ${badge.x} ${badge.y}`);
-      }
-      setSvgPath(parts.join(' '));
-      return;
     }
 
     let path = '';
@@ -291,8 +281,8 @@ export default function CampaignProcess() {
         {/* ================= PROCESS TIMELINE WRAPPING ROUTE ================= */}
         <div ref={containerRef} className="relative mx-auto w-full overflow-visible z-10">
           
-          {/* Top-Level Continuous Neon Green Dynamic SVG Overlay */}
-          <svg className="absolute inset-0 pointer-events-none z-10 w-full h-full overflow-visible">
+          {/* Top-Level Continuous Neon Green Dynamic SVG Overlay (Desktop Only) */}
+          <svg className="absolute inset-0 pointer-events-none z-10 w-full h-full overflow-visible hidden md:block">
             <defs>
               <filter id="subtle-green-glow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="1" result="blur" />
@@ -420,16 +410,16 @@ export default function CampaignProcess() {
                         </div>
 
                         {/* AREA 3: Right Visual Image */}
-                        <div className="relative overflow-hidden h-[150px] lg:h-full w-full border-t border-[#2ABD00]/15 lg:border-l lg:border-t-0 bg-[#020502]">
+                        <div className="relative overflow-hidden aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-full w-full border-t border-[#2ABD00]/15 lg:border-l lg:border-t-0 bg-[#020502]">
                           <div className="absolute inset-0 z-0 bg-[#2ABD00]/10 blur-lg pointer-events-none" />
                           <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#050705] via-transparent to-[#050705]/60 pointer-events-none hidden lg:block" />
-                          <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#050705] via-transparent to-[#050705]/40 pointer-events-none" />
+                          <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#050705]/60 via-transparent to-transparent pointer-events-none hidden lg:block" />
                           <Image
                             src={process.image}
                             alt={process.title}
                             fill
                             sizes="(max-width: 1024px) 100vw, 225px"
-                            className="object-cover object-center opacity-90 transition-transform duration-700 hover:scale-105"
+                            className="object-cover object-center opacity-95 transition-transform duration-700 hover:scale-105"
                           />
                         </div>
 
@@ -439,16 +429,16 @@ export default function CampaignProcess() {
                       <div className="relative grid min-h-[165px] lg:h-full lg:grid-cols-[225px_1.15fr_0.85fr]">
                         
                         {/* AREA 1: Left Visual Image */}
-                        <div className="relative overflow-hidden h-[150px] lg:h-full w-full border-b border-[#2ABD00]/15 lg:border-r lg:border-b-0 order-2 lg:order-1 bg-[#020502]">
+                        <div className="relative overflow-hidden aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-full w-full border-t border-[#2ABD00]/15 lg:border-r lg:border-t-0 order-3 lg:order-1 bg-[#020502]">
                           <div className="absolute inset-0 z-0 bg-[#2ABD00]/10 blur-lg pointer-events-none" />
                           <div className="absolute inset-0 z-10 bg-gradient-to-l from-[#050705] via-transparent to-[#050705]/60 pointer-events-none hidden lg:block" />
-                          <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#050705] via-transparent to-[#050705]/40 pointer-events-none" />
+                          <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#050705]/60 via-transparent to-transparent pointer-events-none hidden lg:block" />
                           <Image
                             src={process.image}
                             alt={process.title}
                             fill
                             sizes="(max-width: 1024px) 100vw, 225px"
-                            className="object-cover object-center opacity-90 transition-transform duration-700 hover:scale-105"
+                            className="object-cover object-center opacity-95 transition-transform duration-700 hover:scale-105"
                           />
                         </div>
 
@@ -484,7 +474,7 @@ export default function CampaignProcess() {
                         </div>
 
                         {/* AREA 3: Deliverables / Checklist */}
-                        <div className="border-t border-[#2ABD00]/15 p-4 sm:p-5 lg:py-4.5 lg:px-5 lg:border-l lg:border-t-0 flex flex-col justify-center order-3 bg-black/20">
+                        <div className="border-t border-[#2ABD00]/15 p-4 sm:p-5 lg:py-4.5 lg:px-5 lg:border-l lg:border-t-0 flex flex-col justify-center order-2 lg:order-3 bg-black/20">
                           <p className="mb-2 text-[9px] font-mono font-bold tracking-[0.3em] text-[#9A9F9B]/80 uppercase">
                             {process.sideTitle}
                           </p>

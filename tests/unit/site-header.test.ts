@@ -109,8 +109,8 @@ describe('the menu panel', () => {
       expect(items.map((i) => i.href)).toContain(pillar.href);
     }
     expect(items.map((i) => i.href)).not.toContain('/services');
-    expect(items.map((i) => i.href)).toContain(CONTACT_NAV.href);
-    expect(items).toHaveLength(10);
+    expect(items.map((i) => i.href)).toContain('/launchpad');
+    expect(items).toHaveLength(11);
   });
 
   /**

@@ -118,7 +118,6 @@ var scrolledToProblem = false;
 try {
   if (sessionStorage.getItem('qx_hard_refresh') === 'true') {
     isHardRefresh = true;
-    sessionStorage.removeItem('qx_hard_refresh');
   }
   if (sessionStorage.getItem('qx_scrolled_to_problem') === 'true' || sessionStorage.getItem('qx_scrolled_past_hero') === 'true') {
     scrolledToProblem = true;
