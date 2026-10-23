@@ -6,17 +6,15 @@ export interface TeamMember {
   role: string;
   email: string;
   image: string;
-  borderRadius: string;
 }
 
 export const TEAM_MEMBERS: TeamMember[] = [
   {
     id: '1',
     name: 'Zack Hill',
-    role: 'Partner & CEO',
+    role: 'Founder & CEO',
     email: 'zack@qavyx.com',
     image: '/images/team/team_zack.webp',
-    borderRadius: '60% 40% 55% 45% / 55% 45% 60% 40%',
   },
   {
     id: '2',
@@ -24,7 +22,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Partner & CCO',
     email: 'arlton@qavyx.com',
     image: '/images/team/team_arlton.webp',
-    borderRadius: '45% 55% 40% 60% / 60% 40% 55% 45%',
   },
   {
     id: '3',
@@ -32,7 +29,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Director of Projects',
     email: 'sarah@qavyx.com',
     image: '/images/team/team_sarah.webp',
-    borderRadius: '52% 48% 62% 38% / 48% 58% 42% 52%',
   },
   {
     id: '4',
@@ -40,7 +36,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Director of Accounts',
     email: 'will@qavyx.com',
     image: '/images/team/team_will.webp',
-    borderRadius: '40% 60% 50% 50% / 55% 45% 60% 40%',
   },
   {
     id: '5',
@@ -48,31 +43,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: 'Creative & Design Director',
     email: 'calvin@qavyx.com',
     image: '/images/team/team_calvin.webp',
-    borderRadius: '55% 45% 65% 35% / 42% 58% 45% 55%',
-  },
-  {
-    id: '6',
-    name: 'Marcus Hayes',
-    role: 'Performance & Media Lead',
-    email: 'marcus@qavyx.com',
-    image: '/images/team/team_marcus.webp',
-    borderRadius: '48% 52% 40% 60% / 58% 42% 55% 45%',
-  },
-  {
-    id: '7',
-    name: 'Correne Spero',
-    role: 'Finance & Operations',
-    email: 'correne@qavyx.com',
-    image: '/images/team/team_correne.webp',
-    borderRadius: '62% 38% 50% 50% / 45% 55% 40% 60%',
-  },
-  {
-    id: '8',
-    name: 'John Cater',
-    role: 'Strategy & Automation Lead',
-    email: 'john@qavyx.com',
-    image: '/images/team/team_john.webp',
-    borderRadius: '42% 58% 55% 45% / 50% 50% 58% 42%',
   },
 ];
 
@@ -84,8 +54,8 @@ export function TeamSection() {
       className="relative w-full py-12 sm:py-16 md:py-20 bg-black select-none overflow-hidden"
     >
       <div className="mx-auto max-w-[var(--qx-shell)] px-3 sm:px-6">
-        {/* Header: Our Team with #2ABD00 highlight */}
-        <div className="mb-12 sm:mb-16 text-left">
+        {/* Header: Our Team */}
+        <div className="mb-10 sm:mb-14 text-left">
           <h2
             id="qx-team-heading"
             className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-sans"
@@ -94,51 +64,66 @@ export function TeamSection() {
           </h2>
         </div>
 
-        {/* 4-Column Responsive Grid matching reference */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 sm:gap-y-14 gap-x-6 sm:gap-x-10 lg:gap-x-8 justify-items-center">
+        {/* 5 Cards in a Single Row matching the reference */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-3.5 xl:gap-4 justify-items-center">
           {TEAM_MEMBERS.map((member) => (
             <div
               key={member.id}
-              className="group flex flex-col items-center text-center w-full max-w-[220px]"
+              className="group relative flex flex-col justify-end w-full max-w-[230px] h-[370px] xs:h-[400px] sm:h-[430px] lg:h-[460px]"
             >
-              {/* Photo Area with Organic Fluid Green Blob behind */}
-              <div className="relative w-[150px] h-[175px] xs:w-[165px] xs:h-[190px] sm:w-[185px] sm:h-[215px] flex items-end justify-center mb-4">
-                {/* Organic Green Fluid Blob */}
+              {/* Green Pillar Card Body matching reference: heavy rounded top-left, square top-right */}
+              <div className="absolute inset-0 rounded-tl-[44px] xs:rounded-tl-[52px] sm:rounded-tl-[60px] rounded-tr-[4px] rounded-b-[4px] bg-gradient-to-b from-[#2ABD00] via-[#1a7a0e] to-[#072403] overflow-hidden shadow-[0_10px_30px_rgba(42,189,0,0.18)] transition-all duration-300 group-hover:shadow-[0_14px_45px_rgba(42,189,0,0.38)]">
+                {/* Vertical Outlined "Directors" Watermark on the LEFT side */}
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-6 xs:-left-5 sm:-left-4 top-[32%] -translate-y-1/2 -rotate-90 origin-center text-3xl xs:text-4xl sm:text-[42px] font-black uppercase tracking-[0.2em] pointer-events-none select-none whitespace-nowrap opacity-25"
+                  style={{
+                    WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.9)',
+                    color: 'transparent',
+                  }}
+                >
+                  Directors
+                </span>
+
+                {/* Subtle top-right ambient light */}
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-2 top-2 bottom-1 bg-gradient-to-br from-[#2ABD00] to-[#125807] shadow-[0_0_28px_rgba(42,189,0,0.35)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-1"
-                  style={{
-                    borderRadius: member.borderRadius,
-                  }}
+                  className="absolute -top-12 -right-12 w-32 h-32 bg-[#86ff66]/15 rounded-full blur-xl pointer-events-none"
                 />
 
-                {/* Team Member Transparent Half-Body Cutout Photo */}
+                {/* Dark Gradient Overlay at Bottom for text legibility */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/85 to-transparent z-10 pointer-events-none"
+                />
+              </div>
+
+              {/* Team Member Cutout with ample headroom */}
+              <div className="relative z-20 w-full h-[84%] flex items-end justify-center pointer-events-none pb-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={member.image}
                   alt={member.name}
-                  className="relative z-10 w-full h-full object-contain object-bottom transition-transform duration-300 group-hover:scale-[1.03]"
+                  className="w-full h-full object-contain object-bottom transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_10px_20px_rgba(0,0,0,0.65)]"
                   loading="eager"
                 />
               </div>
 
-              {/* Role */}
-              <p className="text-[11px] sm:text-xs font-sans text-[#919A94] mb-1 leading-tight">
-                {member.role}
-              </p>
-
-              {/* Name */}
-              <h3 className="text-base sm:text-lg font-bold text-white font-sans leading-tight mb-1 group-hover:text-[#2ABD00] transition-colors">
-                {member.name}
-              </h3>
-
-              {/* Email */}
-              <a
-                href={`mailto:${member.email}`}
-                className="text-xs sm:text-[13px] font-sans font-medium text-[#2ABD00] hover:text-[#86ff66] hover:underline transition-colors leading-tight"
-              >
-                {member.email}
-              </a>
+              {/* Name & Role Content at the Bottom */}
+              <div className="relative z-30 px-3.5 pb-3.5 pt-1 text-left">
+                <h3 className="text-base sm:text-lg font-bold text-white font-sans leading-tight tracking-tight group-hover:text-[#2ABD00] transition-colors">
+                  {member.name}
+                </h3>
+                <p className="text-[11px] sm:text-xs text-white/75 font-sans leading-tight mt-0.5 font-normal">
+                  {member.role}
+                </p>
+                <a
+                  href={`mailto:${member.email}`}
+                  className="inline-block text-[10px] sm:text-[11px] text-[#2ABD00] hover:text-[#86ff66] font-sans leading-tight mt-1 hover:underline transition-colors"
+                >
+                  {member.email}
+                </a>
+              </div>
             </div>
           ))}
         </div>
