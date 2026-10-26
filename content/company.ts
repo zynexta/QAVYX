@@ -275,7 +275,7 @@ export const CONTACT_FORM_FIELDS: readonly FormField[] = [
       'Not Sure Yet',
     ],
   },
-  { id: 'message', label: 'Message', kind: 'textarea', required: true },
+  { id: 'message', label: 'Message', kind: 'textarea', required: false },
 ] as const;
 
 /** §52's Submit CTA. Also §51's CTA and one of §65's six secondaries. */

@@ -160,7 +160,9 @@ describe('the select', () => {
 describe('the whole form', () => {
   it('reports every empty required field of §52’s six at once', () => {
     const errors = formErrors(CONTACT_FORM_FIELDS, {});
-    expect(Object.keys(errors)).toEqual(CONTACT_FORM_FIELDS.map((f) => f.id));
+    expect(Object.keys(errors)).toEqual(
+      CONTACT_FORM_FIELDS.filter((f) => f.required).map((f) => f.id),
+    );
   });
 
   /** §44 has two optional fields, so an empty waitlist has three errors, not five. */

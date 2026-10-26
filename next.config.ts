@@ -85,6 +85,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/who-we-are/about', destination: '/who-we-are', permanent: true },
       { source: '/who-we-are/team', destination: '/who-we-are', permanent: true },
+      { source: '/contact', destination: '/who-we-are/contact', permanent: false },
 
       /**
        * THE PHONE FILM'S REDIRECT IS GONE, and so is the file it pointed at.

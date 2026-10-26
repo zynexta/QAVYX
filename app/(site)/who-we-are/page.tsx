@@ -1,130 +1,23 @@
 import type { Metadata } from 'next';
-import { EYEBROW, InnerPage } from '@/components/inner/InnerPage';
+import Image from 'next/image';
+import { EYEBROW } from '@/components/inner/InnerPage';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { GrowthTeamVisual } from '@/components/services/visuals';
 import { TeamSection } from '@/components/company/TeamSection';
 import {
   ABOUT,
   MISSION,
+  TEAM,
   VISION,
   WHO_WE_ARE,
 } from '@/content/company';
 import { reveal, stagger } from '@/lib/reveal';
 import { pageJsonLd, pageMetadata } from '@/lib/seo';
 
-/**
- * `/who-we-are` — §46 About, §47 Mission, §48 Vision, §49 Why Businesses Choose
- * QAVYX and §50 Meet the Team, in the document's order.
- *
- * ## THIS WAS A HUB, AND THE CLIENT REMOVED THE HOP
- *
- * §64 routes both `/who-we-are` and `/who-we-are/about`, and `content/company.ts`
- * records that the client confirmed all four routes in this group. So this page
- * was the section's index: §46's heading and first paragraph, then two rows
- * linking About and Contact Us, with the whole of §46–§49 one click further
- * down at `/who-we-are/about`.
- *
- * The client's later direction is that "Who We Are" in the menu should BE the
- * about page. That instruction post-dates §64, the same way the header's return
- * post-dates §62 — and it is right about what the hub had become. Its index held
- * two rows: About, which was the only thing on it a visitor had come for, and
- * Contact Us, which is already in the menu, the footer and the homepage's site
- * index. An index of two, one of them redundant, in front of the content.
- *
- * So §46–§49 moved UP to this route rather than the navigation moving DOWN to
- * theirs. `/who-we-are` is the name the client gave this part of the site in §2,
- * §63 and §64; it is what the menu, the footer and the site index all point at,
- * and it is the parent of the one route that remains. Pointing four navigations
- * at `/who-we-are/about` and leaving a bare redirect at the section root would
- * have been the same page with a worse URL. `/who-we-are/about` now 308s here —
- * see `next.config.ts`, and note that it was an INDEXED route, so the redirect
- * is the part that is not optional.
- *
- * ## AND §50 CAME UP WITH IT, in the same direction
- *
- * "Team not a separate page, it just shows in the about page." So
- * `/who-we-are/team` is gone too, redirected alongside About, and §50 is the
- * closing section below.
- *
- * That page was `indexed: false` and unlinked, and the reasoning for both was
- * that a whole page whose entire content is a heading and one sentence — about a
- * team it does not name — asks a search engine to show it in exactly the state
- * it should not be seen in. As the last section of a page that has already said
- * four paragraphs, a mission, a vision and five reasons, the same two strings
- * are a claim the page has earned. So there is nothing left to hold back and
- * nothing left to link, and the three switches `TEAM` used to describe are one:
- * the profile grid, still commented out until §69's assets arrive.
- *
- * The section renders NOW rather than waiting for profiles. It is real client
- * copy either way, and a section that appears on the day the photographs do is a
- * page that silently changes shape — the visible absence is the honest state and
- * the one that gets the assets sent.
- *
- * ## The `<h1>` is the client's line, not the route's name
- *
- * "We're Not an Agency. We're Your Growth Team." — §46's own heading, the way
- * `/services` is headed "What's Inside QAVYX" rather than "Our Services". The
- * route's name is what the menu says and what the tab says; the page says what
- * the client wrote.
- *
- * ## Mission and Vision share one section
- *
- * They are one sentence each. Given a section apiece they would be two headings
- * with a line of body under each, which puts more weight on the headings than on
- * the four paragraphs of §46 above them. Side by side from `md` they read as
- * what they are: a matched pair, the client's own "where we are going" in two
- * halves. Below `md` they stack, in the document's order.
- *
- * ## §49 is a list of reasons, not a sequence
- *
- * A `<ul>`, unnumbered, for the same reason §5's four failure modes on the
- * homepage are unnumbered: numbering asserts an order the client did not write.
- * The one numbered list on this site is Growth Marketing's five steps, which are
- * explicitly "Step 01".."Step 05".
- *
- * ## The title block takes a figure, and it is the only drawing on the route
- *
- * `InnerPage`'s `aside` slot was built for the five pillar pages, which pass the
- * carousel diagram the visitor just clicked; ten routes pass nothing and this
- * was one of them, so `<main>` here contained no SVG at all — a page of four
- * paragraphs, two statements, five reasons and a closing section, entirely in
- * type. `GrowthTeamVisual` fills it: six equal members inside one set of
- * brackets, one of them green.
- *
- * It illustrates the `<h1>` beside it and nothing below it. The section that
- * looks like it wants a picture is §50 Meet the Team, and that one is spoken
- * for — see the note on it below, and never draw people there.
- *
- * ## It does not carry a CTA
- *
- * §46–§49 specify none, and the page's job is to be read. The conversation is in
- * the menu, in the footer on every page, and in the floating WhatsApp button.
- * Adding §65's primary here because most pages have one would be inventing a
- * beat — and it is the reasoning that retired the hub's Contact row rather than
- * moving it down here as a lone index of one.
- */
 const PAGE = { href: '/who-we-are', label: WHO_WE_ARE.heading };
-
-/**
- * §46's four paragraphs, joined — the same treatment `pillarDescription` gives a
- * pillar page's intro, and for the same reason: a description written here would
- * be a second source of truth for the page's pitch that nobody editing
- * `content/company.ts` would think to update.
- *
- * All four rather than the first, which used to be a rule with teeth: the hub
- * led with §46's opening sentence and the About page described itself with the
- * whole of §46, because two routes sharing a description put them into search
- * competing for one result. There is one route now and the competition is gone,
- * but the four paragraphs are still the honest description of what is on it.
- */
 const DESCRIPTION = ABOUT.description.join(' ');
 
 export const metadata: Metadata = pageMetadata({
   path: '/who-we-are',
-  // The route's name and not the `<h1>`. `title.template` in `app/layout.tsx`
-  // makes this "Who We Are — QAVYX", which is what the menu entry, the footer
-  // entry and the browser tab should agree on; §46's heading is a sentence in
-  // the client's voice and belongs on the page rather than in a tab.
   title: WHO_WE_ARE.heading,
   description: DESCRIPTION,
 });
@@ -133,80 +26,298 @@ export default function WhoWeAreRoute() {
   return (
     <>
       <JsonLd data={pageJsonLd({ page: PAGE, description: DESCRIPTION, type: 'AboutPage' })} />
-      <InnerPage title={ABOUT.heading} intro={ABOUT.description} aside={<GrowthTeamVisual />}>
-        {/* Mission and Vision are two claims side by side rather than a section
-            with contents, so they are CARD frames and there is no section frame
-            around them — a frame holding nothing but two frames is a box drawn
-            for its own sake. */}
-        <div {...reveal} className="mt-6 grid gap-4 md:grid-cols-2">
-          {[MISSION, VISION].map((statement, index) => (
-            <section
-              key={statement.heading}
-              data-rv
-              style={stagger(index)}
-              className="qx-frame qx-frame--card flex flex-col gap-3 p-5"
-            >
-              <h2 className={EYEBROW}>{statement.heading}</h2>
-              <p className="max-w-[46ch] text-md text-qx-white">{statement.copy}</p>
-            </section>
-          ))}
-        </div>
 
+      <main className="bg-qx-black selection:bg-[#2ABD00] selection:text-black">
+        <article className="mx-auto max-w-[var(--qx-shell)] px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+          
+          {/* ==============================================================
+              HERO / INTRO SECTION: We're Not an Agency. We're Your Growth Team.
+              ============================================================== */}
+          <div {...reveal} className="relative w-full">
+            {/* Ambient Background Glow */}
+            <div className="pointer-events-none absolute -top-10 left-1/3 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_center,rgba(42,189,0,0.12)_0%,rgba(26,122,14,0.03)_50%,transparent_75%)] blur-3xl" />
 
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              
+              {/* Left Column: Typography, Taglines & Copy */}
+              <div data-rv style={stagger(0)} className="lg:col-span-7 flex flex-col items-start z-10">
+                {/* Main Accessible Heading */}
+                <h1 className="qx-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-[3.1rem] font-bold tracking-tight text-white leading-[1.12] mb-4 sm:mb-5">
+                  <span>We&apos;re Not an Agency. </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2ABD00] via-[#52e825] to-[#2ABD00]">
+                    We&apos;re Your Growth Team.
+                  </span>
+                </h1>
 
-        {/* §50 MEET THE TEAM — a section here, and a page of its own until the
-            client said it belongs on the about page.
+                {/* Lead Sentence */}
+                <p className="text-sm sm:text-base text-white/95 font-semibold leading-relaxed font-sans mb-3 sm:mb-4 max-w-[580px]">
+                  {ABOUT.description[0]}
+                </p>
 
-            THE HEADING IS THE LABEL AND `TEAM.heading` IS NOT. On the route this
-            used to be, "The people behind your growth." was the `<h1>` and the
-            section's name was implied by the URL; here the URL says nothing, so
-            §50's own title heads the section and the client's line is the first
-            thing inside it. It is a `<p>` and not an `<h3>`: a tagline is not a
-            heading, and the five `<h3>`s on this page are §49's reasons — which
-            `phase8d-routes.spec.ts` counts.
-
-            NO PROFILES, AND NO PLACEHOLDER FOR THEM. §69 lists names, roles,
-            bios, photos and social links among the assets still outstanding, so
-            the grid below is commented out and the section is two sentences of
-            real client copy. That is the whole switch now: it used to be three —
-            the grid, the link and `indexed: false` — and the other two went with
-            the route.
-
-            **NEVER fill the grid with invented people.** §66 Rule 05 forbids
-            inventing results and testimonials; a fabricated team is worse than
-            either, because it is the placeholder a visitor is least able to
-            detect and most likely to have made a decision on. Names, roles,
-            bios, stock photographs and silhouettes are all the same mistake. */}
-        {/*
-          THE PROFILE GRID — commented out because no profiles have been
-          supplied. It is written against §50's own suggested fields
-          (`TEAM_PROFILE_FIELDS` in `content/company.ts`), so real profiles
-          drop into it without a redesign. Uncomment it and fill
-          `TEAM.profiles` in the same commit; `tests/unit/company-content.test.ts`
-          fails if the second happens without the first.
-
-          <ul className="mt-6 grid gap-6 border-t border-qx-line pt-6 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAM.profiles.map((profile) => (
-              <li key={profile.name} className="flex flex-col gap-3">
-                <Image
-                  src={profile.image}
-                  alt=""
-                  width={480}
-                  height={480}
-                  className="aspect-square w-full rounded-sm border border-qx-line object-cover"
-                />
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-lg text-qx-white">{profile.name}</h3>
-                  <p className={EYEBROW}>{profile.role}</p>
+                {/* Narrative Details */}
+                <div className="flex flex-col gap-2.5 mb-6 max-w-[580px]">
+                  <p className="text-xs sm:text-sm text-[#919A94] font-medium leading-relaxed font-sans">
+                    {ABOUT.description[1]}
+                  </p>
+                  <p className="text-xs sm:text-sm text-[#919A94] font-medium leading-relaxed font-sans">
+                    {ABOUT.description[2]}
+                  </p>
+                  <p className="text-xs sm:text-sm text-[#919A94] font-medium leading-relaxed font-sans">
+                    {ABOUT.description[3]}
+                  </p>
                 </div>
-                <p className="max-w-[42ch] text-sm text-qx-grey">{profile.bio}</p>
-              </li>
-            ))}
-          </ul>
-        */}
-      </InnerPage>
 
-      {/* Dynamic 3D Team Member Showcase Carousel */}
+                {/* Capabilities Feature Chips */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10 w-full max-w-[580px]">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/15 bg-black/60 backdrop-blur-sm text-[11px] text-white/90 font-sans shadow-sm hover:border-[#2ABD00]/40 transition-colors">
+                    <span className="text-[#2ABD00] font-bold">✓</span> One Unified Team
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/15 bg-black/60 backdrop-blur-sm text-[11px] text-white/90 font-sans shadow-sm hover:border-[#2ABD00]/40 transition-colors">
+                    <span className="text-[#2ABD00] font-bold">✓</span> AI Automation
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/15 bg-black/60 backdrop-blur-sm text-[11px] text-white/90 font-sans shadow-sm hover:border-[#2ABD00]/40 transition-colors">
+                    <span className="text-[#2ABD00] font-bold">✓</span> Measurable Growth
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/15 bg-black/60 backdrop-blur-sm text-[11px] text-white/90 font-sans shadow-sm hover:border-[#2ABD00]/40 transition-colors">
+                    <span className="text-[#2ABD00] font-bold">✓</span> Fast Execution
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: High-Tech Visual Graphic */}
+              <div data-rv style={stagger(1)} className="lg:col-span-5 flex items-center justify-center lg:justify-end w-full">
+                <div className="relative w-full max-w-[480px] lg:max-w-[440px] xl:max-w-[480px]">
+                  
+                  {/* Outer Ambient Green Glow behind image */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div className="h-[260px] w-[260px] sm:h-[340px] sm:w-[340px] rounded-full bg-[radial-gradient(circle_at_center,rgba(42,189,0,0.25)_0%,rgba(26,122,14,0.08)_50%,transparent_75%)] blur-2xl" />
+                  </div>
+
+                  {/* Main Frame with Glassmorphic Border */}
+                  <div className="relative group overflow-visible rounded-2xl border border-white/15 bg-gradient-to-b from-[#06180a]/90 via-[#020b04]/95 to-[#010602] p-2.5 sm:p-3 backdrop-blur-xl shadow-[0_16px_45px_rgba(0,0,0,0.9),0_0_25px_rgba(42,189,0,0.18)] transition-all duration-500 hover:border-[#2ABD00]/70 hover:shadow-[0_20px_50px_rgba(0,0,0,0.95),0_0_35px_rgba(42,189,0,0.35)]">
+                    
+                    {/* Glowing Tech Corners */}
+                    <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[#2ABD00] rounded-tl-sm pointer-events-none" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[#2ABD00] rounded-tr-sm pointer-events-none" />
+                    <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[#2ABD00] rounded-bl-sm pointer-events-none" />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[#2ABD00] rounded-br-sm pointer-events-none" />
+
+                    {/* Top Edge Glow */}
+                    <div className="pointer-events-none absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#2ABD00]/80 to-transparent" />
+
+                    {/* Image Container with Inner Vignette */}
+                    <div className="relative overflow-hidden rounded-xl bg-black aspect-[4/3]">
+                      <Image
+                        src="/images/who-we-are-hero.jpg"
+                        alt="QAVYX Growth Team Holographic Digital Workspace"
+                        width={720}
+                        height={540}
+                        priority
+                        className="w-full h-full object-cover transform transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                      {/* Vignette Gradients */}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/25" />
+                    </div>
+
+                    {/* Floating Tech Badge 2 (Bottom-Left: Reach & Impact) */}
+                    <div className="absolute -bottom-3 -left-2 sm:-left-4 z-20 flex items-center gap-2.5 rounded-lg border border-white/20 bg-black/95 px-3 py-1.5 backdrop-blur-md shadow-[0_6px_22px_rgba(0,0,0,0.95)] transition-transform duration-300 hover:scale-105">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2ABD00]/20 text-[#2ABD00]">
+                        <svg className="w-3.5 h-3.5 stroke-current fill-none stroke-[2.2]" viewBox="0 0 24 24">
+                          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                          <polyline points="17 6 23 6 23 12" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="font-mono text-[8px] uppercase tracking-wider text-[#919A94]">Reach & Impact</span>
+                        <span className="font-sans text-[10px] sm:text-[11px] font-bold text-white leading-tight">
+                          India, GCC & Beyond
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ==============================================================
+              SECTION 2: SLANTED DUAL-CARD COMPOSITION (OUR MISSION & OUR VISION)
+              Matching User Reference Design - Perfectly Aligned, Separate, Unclipped
+              ============================================================== */}
+          <div {...reveal} className="relative mt-8 sm:mt-12 md:mt-16 w-full flex justify-center">
+            {/* Ambient Background Glow Behind Cards */}
+            <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-[720px] h-[280px] bg-[radial-gradient(ellipse_at_center,rgba(42,189,0,0.14)_0%,transparent_70%)] blur-3xl" />
+
+            {/* Container for the Dual Cards */}
+            <div className="relative w-full max-w-[1080px]">
+              
+              {/* Desktop Coordinated SVG Background Frame (Both Cards Clearly Separate with Parallel Diagonal Gap) */}
+              <svg
+                viewBox="0 0 1000 300"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+                className="hidden md:block absolute inset-0 w-full h-full pointer-events-none overflow-visible drop-shadow-[0_16px_45px_rgba(0,0,0,0.85)]"
+              >
+                <defs>
+                  <linearGradient id="mission-card-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#092610" stopOpacity="0.92" />
+                    <stop offset="45%" stopColor="#041407" stopOpacity="0.95" />
+                    <stop offset="100%" stopColor="#010602" stopOpacity="0.98" />
+                  </linearGradient>
+                  <linearGradient id="vision-card-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#092610" stopOpacity="0.92" />
+                    <stop offset="45%" stopColor="#041407" stopOpacity="0.95" />
+                    <stop offset="100%" stopColor="#010602" stopOpacity="0.98" />
+                  </linearGradient>
+                </defs>
+
+                {/* Card 1: Our Mission */}
+                <path
+                  d="M 24,4 L 508,4 Q 522,4 518,18 L 458,282 Q 454,296 440,296 L 24,296 Q 4,296 4,276 L 4,24 Q 4,4 24,4 Z"
+                  fill="url(#mission-card-bg)"
+                  stroke="#2ABD00"
+                  strokeWidth="1.5"
+                  strokeOpacity="0.75"
+                  vectorEffect="non-scaling-stroke"
+                />
+
+                {/* Card 2: Our Vision */}
+                <path
+                  d="M 554,4 L 976,4 Q 996,4 996,24 L 996,276 Q 996,296 976,296 L 494,296 Q 480,296 476,282 L 536,18 Q 540,4 554,4 Z"
+                  fill="url(#vision-card-bg)"
+                  stroke="#2ABD00"
+                  strokeWidth="1.5"
+                  strokeOpacity="0.75"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+
+              {/* Cards Content Grid */}
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-0 w-full items-stretch">
+                
+                {/* ---------------- CARD 1: OUR MISSION ---------------- */}
+                <section
+                  aria-labelledby="mission-heading"
+                  data-rv
+                  style={stagger(0)}
+                  className="relative flex flex-col justify-between p-6 sm:p-7 md:py-8 md:pl-8 md:pr-14 lg:py-9 lg:pl-10 lg:pr-20 min-h-[240px] sm:min-h-[260px] md:min-h-[280px]"
+                >
+                  {/* Mobile Glassmorphic Frame */}
+                  <div
+                    aria-hidden="true"
+                    className="md:hidden absolute inset-0 rounded-2xl border border-[#2ABD00]/70 bg-gradient-to-b from-[#092610]/95 via-[#041407]/95 to-[#010602]/98 shadow-[0_12px_36px_rgba(0,0,0,0.85)] pointer-events-none"
+                  />
+
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      {/* Header: Label + Green Bar */}
+                      <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3">
+                        <h2
+                          id="mission-heading"
+                          className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/90 font-medium"
+                        >
+                          {MISSION.heading}
+                        </h2>
+                        <span className="w-7 sm:w-8 h-[2px] bg-[#2ABD00] rounded-full inline-block" />
+                      </div>
+
+                      {/* Bold Headline matching reference */}
+                      <h3 className="text-lg sm:text-xl md:text-[21px] lg:text-[24px] xl:text-[26px] font-extrabold text-white leading-[1.18] tracking-tight mb-2.5 sm:mb-3 max-w-[420px]">
+                        <span>Empowering </span>
+                        <br />
+                        <span className="text-[#2ABD00]">Scalable Business </span>
+                        <br />
+                        <span>Acceleration.</span>
+                      </h3>
+
+                      {/* Official Client Copy */}
+                      <p className="text-xs sm:text-[13px] lg:text-[13.5px] text-[#919A94] font-medium leading-relaxed font-sans max-w-[370px]">
+                        {MISSION.copy}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* ---------------- CARD 2: OUR VISION ---------------- */}
+                <section
+                  aria-labelledby="vision-heading"
+                  data-rv
+                  style={stagger(1)}
+                  className="relative flex flex-col justify-between p-6 sm:p-7 md:py-8 md:pr-8 md:pl-16 lg:py-9 lg:pr-10 lg:pl-20 min-h-[240px] sm:min-h-[260px] md:min-h-[280px]"
+                >
+                  {/* Mobile Glassmorphic Frame */}
+                  <div
+                    aria-hidden="true"
+                    className="md:hidden absolute inset-0 rounded-2xl border border-[#2ABD00]/70 bg-gradient-to-b from-[#092610]/95 via-[#041407]/95 to-[#010602]/98 shadow-[0_12px_36px_rgba(0,0,0,0.85)] pointer-events-none"
+                  />
+
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      {/* Header: Label + Green Bar */}
+                      <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3">
+                        <h2
+                          id="vision-heading"
+                          className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/90 font-medium"
+                        >
+                          {VISION.heading}
+                        </h2>
+                        <span className="w-7 sm:w-8 h-[2px] bg-[#2ABD00] rounded-full inline-block" />
+                      </div>
+
+                      {/* Bold Headline matching reference */}
+                      <h3 className="text-lg sm:text-xl md:text-[21px] lg:text-[24px] xl:text-[26px] font-extrabold text-white leading-[1.18] tracking-tight mb-2.5 sm:mb-3 max-w-[420px]">
+                        <span>The Trusted </span>
+                        <br />
+                        <span>Benchmark For </span>
+                        <br />
+                        <span className="text-[#2ABD00]">Enterprise Growth.</span>
+                      </h3>
+
+                      {/* Official Client Copy */}
+                      <p className="text-xs sm:text-[13px] lg:text-[13.5px] text-[#919A94] font-medium leading-relaxed font-sans max-w-[370px]">
+                        {VISION.copy}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </div>
+          </div>
+
+          {/*
+            THE PROFILE GRID — commented out because no profiles have been
+            supplied. It is written against §50's own suggested fields
+            (`TEAM_PROFILE_FIELDS` in `content/company.ts`), so real profiles
+            drop into it without a redesign. Uncomment it and fill
+            `TEAM.profiles` in the same commit; `tests/unit/company-content.test.ts`
+            fails if the second happens without the first.
+
+            <ul className="mt-6 grid gap-6 border-t border-qx-line pt-6 sm:grid-cols-2 lg:grid-cols-3">
+              {TEAM.profiles.map((profile) => (
+                <li key={profile.name} className="flex flex-col gap-3">
+                  <Image
+                    src={profile.image}
+                    alt=""
+                    width={480}
+                    height={480}
+                    className="aspect-square w-full rounded-sm border border-qx-line object-cover"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-lg text-qx-white">{profile.name}</h3>
+                    <p className={EYEBROW}>{profile.role}</p>
+                  </div>
+                  <p className="max-w-[42ch] text-sm text-qx-grey">{profile.bio}</p>
+                </li>
+              ))}
+            </ul>
+          */}
+        </article>
+      </main>
+
+      {/* Dynamic 3D Team Member Showcase Carousel (Left Completely Untouched as Requested) */}
       <TeamSection />
     </>
   );
