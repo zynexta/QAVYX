@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useId, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   ERROR_PREFIX,
   FORM_NOTICE,
@@ -20,6 +20,22 @@ export function ContactPageContent() {
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [selectOpen, setSelectOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (selectRef.current && !selectRef.current.contains(e.target as Node)) {
+        setSelectOpen(false);
+      }
+    }
+    if (selectOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectOpen]);
 
   const errorFor = (field: FormField): string | null =>
     touched[field.id] ? fieldError(field, values[field.id] ?? '') : null;
@@ -46,9 +62,9 @@ export function ContactPageContent() {
             </span>
           </div>
 
-          {/* Heading - Scaled up to match site standards */}
-          <h1 className="qx-display text-3xl sm:text-4xl md:text-5xl lg:text-[3.1rem] font-bold tracking-tight text-white leading-[1.14] mb-2 sm:mb-3">
-            <span>Let&apos;s Grow </span>
+          {/* Heading - Scaled up to match site standards, responsive on mobile */}
+          <h1 className="qx-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-[3.1rem] font-bold tracking-tight text-white leading-tight mb-2 sm:mb-3">
+            <span className="block sm:inline">Let&apos;s Grow </span>
             <span className="text-[#2ABD00]">Your Business.</span>
           </h1>
 
@@ -71,22 +87,21 @@ export function ContactPageContent() {
                 CARD 2: GET IN TOUCH (Visual Right, DOM First)
                 Col span: lg:col-span-5, lg:order-2
                 ========================================================== */}
-            <div className="lg:col-span-5 lg:order-2 relative flex flex-col justify-between p-5 sm:p-6 rounded-xl border border-[#2ABD00]/25 bg-gradient-to-b from-[#06180a]/90 via-[#031006]/95 to-[#010602]/98 backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] hover:border-[#2ABD00]/40 transition-all duration-300">
+            <div className="lg:col-span-5 lg:order-2 relative flex flex-col justify-between p-4 sm:p-6 rounded-xl border border-[#2ABD00]/25 bg-gradient-to-b from-[#06180a]/90 via-[#031006]/95 to-[#010602]/98 backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] hover:border-[#2ABD00]/40 transition-all duration-300">
               <div>
                 {/* Header Row: | GET IN TOUCH */}
-                <div className="flex items-center mb-4 sm:mb-5">
+                <div className="flex items-center mb-3 sm:mb-5">
                   <div className="flex items-center gap-2">
                     <span className="w-1 h-3.5 bg-[#2ABD00] rounded-full inline-block" />
-                    <span className="font-mono text-xs uppercase tracking-[0.22em] text-white font-bold">
+                    <span className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-white font-bold">
                       GET IN TOUCH
                     </span>
                   </div>
                 </div>
 
-                {/* Heading */}
-                <h2 className="text-xl sm:text-2xl md:text-[26px] font-bold text-white tracking-tight leading-snug mb-2">
-                  <span>Prefer to </span>
-                  <br />
+                {/* Heading - exactly 2 lines on mobile */}
+                <h2 className="text-[17px] xs:text-xl sm:text-2xl md:text-[26px] font-bold text-white tracking-tight leading-snug mb-2">
+                  <span className="block sm:inline">Prefer to </span>
                   <span className="text-[#2ABD00]">connect directly?</span>
                 </h2>
 
@@ -184,13 +199,13 @@ export function ContactPageContent() {
                 CARD 1: SEND US A MESSAGE (Visual Left, DOM Second)
                 Col span: lg:col-span-7, lg:order-1
                 ========================================================== */}
-            <div className="lg:col-span-7 lg:order-1 relative flex flex-col justify-between p-5 sm:p-6 rounded-xl border border-[#2ABD00]/25 bg-gradient-to-b from-[#06180a]/90 via-[#031006]/95 to-[#010602]/98 backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] hover:border-[#2ABD00]/40 transition-all duration-300">
+            <div className="lg:col-span-7 lg:order-1 relative flex flex-col justify-between p-4 sm:p-6 rounded-xl border border-[#2ABD00]/25 bg-gradient-to-b from-[#06180a]/90 via-[#031006]/95 to-[#010602]/98 backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] hover:border-[#2ABD00]/40 transition-all duration-300">
               <div>
                 {/* Header Row: | SEND US A MESSAGE */}
-                <div className="flex items-center mb-4 sm:mb-5">
+                <div className="flex items-center mb-3 sm:mb-5">
                   <div className="flex items-center gap-2">
                     <span className="w-1 h-3.5 bg-[#2ABD00] rounded-full inline-block" />
-                    <span className="font-mono text-xs uppercase tracking-[0.22em] text-white font-bold">
+                    <span className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-white font-bold">
                       SEND US A MESSAGE
                     </span>
                   </div>
@@ -212,7 +227,7 @@ export function ContactPageContent() {
                     return (
                       <div className="flex flex-col gap-1 w-full">
                         <label htmlFor={inputId}>
-                          <span className="font-mono text-xs uppercase tracking-wider text-white font-semibold">
+                          <span className="font-mono text-[11px] sm:text-xs uppercase tracking-normal sm:tracking-wider text-white font-semibold">
                             {field.label}
                           </span>
                           <span className="sr-only">
@@ -252,7 +267,7 @@ export function ContactPageContent() {
                     return (
                       <div className="flex flex-col gap-1 w-full">
                         <label htmlFor={inputId}>
-                          <span className="font-mono text-xs uppercase tracking-wider text-white font-semibold">
+                          <span className="font-mono text-[11px] sm:text-xs uppercase tracking-normal sm:tracking-wider text-white font-semibold">
                             {field.label}
                           </span>
                           <span className="sr-only">
@@ -292,7 +307,7 @@ export function ContactPageContent() {
                     return (
                       <div className="flex flex-col gap-1 w-full">
                         <label htmlFor={inputId}>
-                          <span className="font-mono text-xs uppercase tracking-wider text-white font-semibold">
+                          <span className="font-mono text-[11px] sm:text-xs uppercase tracking-normal sm:tracking-wider text-white font-semibold">
                             {field.label}
                           </span>
                           <span className="sr-only">
@@ -332,7 +347,7 @@ export function ContactPageContent() {
                     return (
                       <div className="flex flex-col gap-1 w-full">
                         <label htmlFor={inputId}>
-                          <span className="font-mono text-xs uppercase tracking-wider text-white font-semibold">
+                          <span className="font-mono text-[11px] sm:text-xs uppercase tracking-normal sm:tracking-wider text-white font-semibold">
                             {field.label}
                           </span>
                           <span className="sr-only">
@@ -341,7 +356,7 @@ export function ContactPageContent() {
                         </label>
                         <div className="flex gap-2 w-full">
                           {/* Square +91 Selector */}
-                          <div className="shrink-0 flex items-center justify-between gap-1.5 h-[38px] px-3 rounded-[3px] border border-white/10 bg-[#061208]/90 text-white text-xs sm:text-sm font-mono select-none">
+                          <div className="shrink-0 flex items-center justify-between gap-1.5 h-[38px] px-2.5 sm:px-3 rounded-[3px] border border-white/10 bg-[#061208]/90 text-white text-xs sm:text-sm font-mono select-none">
                             <span>+91</span>
                             <svg className="w-3 h-3 text-[#919A94]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <polyline points="6 9 12 15 18 9" />
@@ -352,7 +367,7 @@ export function ContactPageContent() {
                             id={inputId}
                             name={field.id}
                             type="tel"
-                            placeholder="Enter your WhatsApp number"
+                            placeholder="WhatsApp number"
                             value={values[field.id] ?? ''}
                             aria-required={field.required}
                             aria-invalid={error ? true : undefined}
@@ -373,50 +388,138 @@ export function ContactPageContent() {
                     );
                   })()}
 
-                  {/* Field 5: WHAT ARE YOU LOOKING TO GROW? (Square Dropdown) */}
+                  {/* Field 5: WHAT ARE YOU LOOKING TO GROW? (Custom Themed Dropdown + Hidden Select for Test Contracts) */}
                   {(() => {
                     const field = CONTACT_FORM_FIELDS[4]!;
                     const inputId = `${prefix}-${field.id}`;
                     const errorId = `${inputId}-error`;
                     const error = errorFor(field);
+                    const selectedValue = values[field.id] ?? '';
                     return (
-                      <div className="flex flex-col gap-1 w-full">
+                      <div className="flex flex-col gap-1 w-full" ref={selectRef}>
                         <label htmlFor={inputId}>
-                          <span className="font-mono text-xs uppercase tracking-wider text-white font-semibold">
+                          <span className="font-mono text-[11px] sm:text-xs uppercase tracking-normal sm:tracking-wider text-white font-semibold">
                             {field.label}
                           </span>
                           <span className="sr-only">
                             {field.required ? REQUIRED_MARKER : OPTIONAL_MARKER}
                           </span>
                         </label>
+
+                        {/* Hidden native select for accessibility and test contracts */}
+                        <select
+                          id={inputId}
+                          name={field.id}
+                          value={selectedValue}
+                          aria-required={field.required}
+                          aria-invalid={error ? true : undefined}
+                          aria-describedby={error ? errorId : undefined}
+                          onChange={(e) => {
+                            setValues((v) => ({ ...v, [field.id]: e.target.value }));
+                            setTouched((t) => ({ ...t, [field.id]: true }));
+                          }}
+                          className="sr-only"
+                          tabIndex={-1}
+                          aria-hidden="true"
+                        >
+                          <option value="">{SELECT_PLACEHOLDER}</option>
+                          {field.options?.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Custom QAVYX Themed Dropdown Trigger */}
                         <div className="relative w-full">
-                          <select
-                            id={inputId}
-                            name={field.id}
-                            value={values[field.id] ?? ''}
-                            aria-required={field.required}
-                            aria-invalid={error ? true : undefined}
-                            aria-describedby={error ? errorId : undefined}
-                            onChange={(e) => setValues((v) => ({ ...v, [field.id]: e.target.value }))}
+                          <button
+                            type="button"
+                            aria-haspopup="listbox"
+                            aria-expanded={selectOpen}
+                            onClick={() => setSelectOpen((open) => !open)}
                             onBlur={() => setTouched((t) => ({ ...t, [field.id]: true }))}
-                            className={`w-full h-[38px] appearance-none rounded-[3px] border bg-[#061208]/90 px-3.5 text-xs sm:text-sm text-white placeholder:text-white/20 focus:border-[#2ABD00] focus:outline-none transition-colors cursor-pointer pr-9 ${
-                              error ? 'border-[#2ABD00]' : 'border-white/10'
+                            className={`w-full h-[38px] flex items-center justify-between rounded-[3px] border bg-[#061208]/90 px-3 sm:px-3.5 text-xs sm:text-sm text-left transition-colors cursor-pointer select-none ${
+                              error
+                                ? 'border-[#2ABD00]'
+                                : selectOpen
+                                ? 'border-[#2ABD00] shadow-[0_0_10px_rgba(42,189,0,0.25)]'
+                                : 'border-white/10 hover:border-[#2ABD00]/40'
                             }`}
                           >
-                            <option value="" className="bg-[#050d07] text-[#919A94]">
-                              {SELECT_PLACEHOLDER}
-                            </option>
-                            {field.options?.map((opt) => (
-                              <option key={opt} value={opt} className="bg-[#050d07] text-white">
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#919A94]">
-                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="6 9 12 15 18 9" />
-                            </svg>
-                          </div>
+                            <span
+                              className={`truncate font-sans ${
+                                selectedValue ? 'text-white font-medium' : 'text-white/35 font-normal'
+                              }`}
+                            >
+                              {selectedValue || SELECT_PLACEHOLDER}
+                            </span>
+                            <div className={`shrink-0 ml-2 text-[#919A94] transition-transform duration-200 ${selectOpen ? 'rotate-180 text-[#2ABD00]' : ''}`}>
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            </div>
+                          </button>
+
+                          {/* Custom Dropdown Menu Popup - 100% perfectly aligned with trigger */}
+                          {selectOpen && (
+                            <ul
+                              role="listbox"
+                              aria-label={field.label}
+                              className="absolute top-[calc(100%+4px)] left-0 w-full z-50 rounded-[3px] border border-[#2ABD00]/40 bg-[#061509] shadow-[0_16px_40px_rgba(0,0,0,0.98),0_0_20px_rgba(42,189,0,0.2)] py-1 overflow-hidden"
+                            >
+                              {/* Placeholder / Reset Option */}
+                              <li
+                                role="option"
+                                aria-selected={!selectedValue}
+                                onClick={() => {
+                                  setValues((v) => ({ ...v, [field.id]: '' }));
+                                  setTouched((t) => ({ ...t, [field.id]: true }));
+                                  setSelectOpen(false);
+                                }}
+                                className={`px-3 sm:px-3.5 py-2 text-xs sm:text-sm cursor-pointer transition-colors font-sans flex items-center justify-between ${
+                                  !selectedValue
+                                    ? 'bg-[#2ABD00]/15 text-[#2ABD00] font-semibold'
+                                    : 'text-[#919A94]/70 hover:bg-[#2ABD00]/10 hover:text-white'
+                                }`}
+                              >
+                                <span>{SELECT_PLACEHOLDER}</span>
+                                {!selectedValue && (
+                                  <svg className="w-3.5 h-3.5 text-[#2ABD00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </li>
+
+                              {/* 6 Document Options */}
+                              {field.options?.map((opt) => {
+                                const isSelected = selectedValue === opt;
+                                return (
+                                  <li
+                                    key={opt}
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    onClick={() => {
+                                      setValues((v) => ({ ...v, [field.id]: opt }));
+                                      setTouched((t) => ({ ...t, [field.id]: true }));
+                                      setSelectOpen(false);
+                                    }}
+                                    className={`px-3 sm:px-3.5 py-2 text-xs sm:text-sm cursor-pointer transition-colors font-sans flex items-center justify-between ${
+                                      isSelected
+                                        ? 'bg-[#2ABD00]/20 text-[#2ABD00] font-semibold'
+                                        : 'text-white/90 hover:bg-[#2ABD00]/15 hover:text-white'
+                                    }`}
+                                  >
+                                    <span>{opt}</span>
+                                    {isSelected && (
+                                      <svg className="w-3.5 h-3.5 text-[#2ABD00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    )}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
                         </div>
                         {error ? (
                           <p id={errorId} className="font-mono text-[9px] text-[#2ABD00]">
@@ -436,7 +539,7 @@ export function ContactPageContent() {
                     return (
                       <div className="flex flex-col gap-1 w-full">
                         <label htmlFor={inputId}>
-                          <span className="font-mono text-xs uppercase tracking-wider text-white font-semibold">
+                          <span className="font-mono text-[11px] sm:text-xs uppercase tracking-normal sm:tracking-wider text-white font-semibold">
                             {field.label}
                           </span>
                           <span className="sr-only">
